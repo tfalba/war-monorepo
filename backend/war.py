@@ -19,28 +19,6 @@ def split_shuffled_decks() -> Tuple[List[Dict], List[Dict]]:
     mid = len(shuffled) // 2
     return shuffled[:mid], shuffled[mid:]
 
-# def play_round(deckA: List[Dict], deckB: List[Dict], bonus: List[Dict] | None = None):
-#     """Draw one card each. If tie, return tie with bonus to carry to WAR."""
-#     bonus = [] if bonus is None else list(bonus)
-#     qa, qb = deque(deckA), deque(deckB)
-#     if not qa or not qb:
-#         return {"deckA": deckA, "deckB": deckB, "result": "game-over", "log": "No cards to play."}
-
-#     a = qa.popleft()
-#     b = qb.popleft()
-
-#     if a["num"] > b["num"]:
-#         # qa.extend([*bonus, a, b])
-#         return {"deckA": list(qa), "deckB": list(qb), "cardA": a, "cardB": b, "result": "A",
-#                 "log": f"A wins: {display_card(a)} vs {display_card(b)}"}
-#     elif b["num"] > a["num"]:
-#         # qb.extend([*bonus, b, a])
-#         return {"deckA": list(qa), "deckB": list(qb), "cardA": a, "cardB": b, "result": "B",
-#                 "log": f"B wins: {display_card(a)} vs {display_card(b)}"}
-#     else:
-#         return {"deckA": list(qa), "deckB": list(qb), "cardA": a, "cardB": b, "result": "tie",
-#                 "log": f"Tie: {display_card(a)} vs {display_card(b)}", "bonus": [a, b]}
-
 def play_round(deckA: List[Dict], deckB: List[Dict], bonus: List[Dict] | None = None):
     """Draw one card each. If tie, return tie with bonus to carry to WAR."""
     bonus = [] if bonus is None else list(bonus)
@@ -62,20 +40,6 @@ def play_round(deckA: List[Dict], deckB: List[Dict], bonus: List[Dict] | None = 
     else:
         return {"deckA": list(qa), "deckB": list(qb), "result": "tie",
                 "log": f"Tie: {display_card(a)} vs {display_card(b)}", "bonus": [a, b]}
-    
-def record_round(deckA: List[Dict], deckB: List[Dict], cardA: Dict | None = None, cardB: Dict | None = None, bonus: List[Dict] | None = None): 
-    bonus = [] if bonus is None else list(bonus)
-    qa, qb = deque(deckA), deque(deckB)
-
-    if cardA > cardB:
-        qa.extend([*bonus, cardA, cardB])
-        return {"deckA": list(qa), "deckB": list(qb), "result": "A"}
-    elif cardB > cardA:
-        qb.extend([*bonus, cardB, cardA])
-        return {"deckA": list(qa), "deckB": list(qb), "result": "B"}
-    else:
-        return {"deckA": list(qa), "deckB": list(qb), "result": "tie", "bonus": [cardA, cardB]}
-
 
 
 def war_round(deckA: List[Dict], deckB: List[Dict], bonus: List[Dict]):

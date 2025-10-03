@@ -14,25 +14,10 @@ export async function playRound(deckA: Card[], deckB: Card[], bonus?: Card[]) {
   return data as {
     deckA: Card[];
     deckB: Card[];
-    // cardA: Card;
-    // cardB: Card;
     result: "A" | "B" | "tie" | "game-over";
     log: string;
     bonus?: Card[];
   };
-}
-
-export async function recordRound(deckA: Card[], deckB: Card[], cardA?: Card, cardB?: Card, bonus?: Card[]) {
-    const { data } = await api.post("/game/return", {deckA, deckB, cardA, cardB, bonus });
-    return data as {
-        deckA: Card[];
-        deckB: Card[];
-        // cardA: Card;
-        // cardB: Card;
-        result: "A" | "B" | "tie" | "game-over";
-        log: string;
-        bonus?: Card[];
-    };
 }
 
 export async function war(deckA: Card[], deckB: Card[], bonus: Card[]) {
