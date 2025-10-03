@@ -1,0 +1,14 @@
+# Handle line endings consistently
+* text=auto eol=lf
+
+# Treat these as binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+
+# Lockfiles shouldn't be merged automatically
+package-lock.json merge=union
+yarn.lock merge=union
