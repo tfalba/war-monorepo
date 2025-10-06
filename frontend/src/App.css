@@ -127,15 +127,29 @@
     color: white;
     border: none;
     padding: 10px 20px;
-    border-radius: 11px;
-    font-size: 1.8em;
+    border-radius: 90px;
+    font-size: 1.3em;
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    height: 150px;
+    width: 150px;
+    border: 2px solid #c6c1c1;
+    box-shadow: 2px 2px 6px #dfd0cffa;
+}
+
+.switch-button {
+    top: 10px;
+    right: 0;
+    left: 10px;
+    background-color: yellow;
+    color: black;
 }
 
 .war-container {
     font-family: "system-ui, sans-serif";
-    padding: 20px 40px 20px 15vw;
+    padding: 20px 40px 20px 5vw;
     margin: 0 auto;
-    /* padding-left: 15vw; */
     color: white;
 }
 

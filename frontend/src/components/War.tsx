@@ -111,8 +111,8 @@ export default function War() {
       <p
         style={{
           margin: "0 0 10px 0",
-          textAlign: "right",
-          fontSize: "1.5em",
+          textAlign: "center",
+          fontSize: "1.8em",
         }}
       >
         {log}
@@ -164,12 +164,12 @@ function Column({ title, cards, winner }: { title: string; cards: Card[]; winner
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
-        marginRight: "-50vw",
+        marginRight: "-40vw",
       }}
     >
       <h3 style={{ margin: "0 auto" }}>{title}</h3>
       <div
-        style={{ display: "flex", flexWrap: "wrap", gap: 6, width: "100vw" }}
+        style={{ display: "flex", flexWrap: "wrap", gap: 6, width: "80vw" }}
         ref={containerRef}
       >
         {[...cards].reverse().map((c, i) => (
