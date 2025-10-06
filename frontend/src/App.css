@@ -4,10 +4,6 @@
   margin: 0 auto;
   /* padding: 2rem; */
   text-align: center;
-  background-image: url('./assets/poker-background.jpg');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
 }
 
 .logo {
@@ -51,11 +47,9 @@
   padding: 4px 8px;
   display: inline-block;
   min-width: 50px;
-  min-height: 75px;
+  min-height: 80px;
   text-align: left;
   color: black;
-  /* border: 2px solid black; */
-  /* padding: 0.5em 1em; */
   margin: 0.2em;
   font-size: .8em;
   font-weight: bold;
@@ -101,7 +95,7 @@
 
 .card-buffer {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: center;
     margin-top: 7vh;
     gap: 16px;
