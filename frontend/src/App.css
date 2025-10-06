@@ -59,10 +59,24 @@
       display: flex;
   flex-direction: column ;
   justify-content: space-between;
+}
 
+.display-view span:not(:first-of-type) {
+  padding-bottom: 6px;
+  padding-right: 6px;
+  text-align: right;
 
 }
 
+.display-view span:first-of-type {
+  padding-top: 6px;
+  padding-left: 6px;
+}
+
+.card-view span:not(:first-of-type) {
+  text-align: right;
+}
+  /* transform: rotate(180deg); */
 
 .display-view {
   border-radius: 11px;
@@ -100,6 +114,42 @@
     margin-top: 7vh;
     gap: 16px;
 }
+
+.card-back {
+     background-image: url(./assets/deck-back.png);
+              background-size: contain;
+              background-repeat: no-repeat;
+              background-position: center;
+}
+
+.button-style {
+    background-color: #1e3c78;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 11px;
+    font-size: 1.8em;
+}
+
+.war-container {
+    font-family: "system-ui, sans-serif";
+    padding: 20px 40px 20px 15vw;
+    margin: 0 auto;
+    /* padding-left: 15vw; */
+    color: white;
+}
+
+.image-background {
+    position: fixed;
+    top: 0;
+    left: -15vw;
+    width: 115%;
+    height: 100%;
+    z-index: -1;
+    object-fit: cover;
+}
+   
+
 /* 
 .felt-background {
   width: 100%;
