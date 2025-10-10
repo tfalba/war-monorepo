@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict, Optional
-from war import split_shuffled_decks, play_round, war_round
+from war import split_shuffled_decks, play_round, war_round, double_deck_shuffled, start_bj
 
 app = FastAPI(title="War API")
 
@@ -20,10 +20,24 @@ class DeckState(BaseModel):
     deckB: List[Dict]
     bonus: Optional[List[Dict]] = None
 
+class BJDeckState(BaseModel):
+    deck: List[Dict]
+    # playerDeck: List[Dict]
+    # dealerDeck: List[Dict]
+
 @app.get("/game/start")
 def game_start():
     deckA, deckB = split_shuffled_decks()
     return {"deckA": deckA, "deckB": deckB, "log": "New shuffled game."}
+
+@app.get("/game/black-jack-start")
+def game_blackjack_start():
+    deck = double_deck_shuffled()
+    return {"deck": deck, "log": "New shuffled Blackjack game."}
+
+@app.post("/game/black-jack-round")
+def game_blackjack_round(state: BJDeckState):
+    return start_bj(state.deck)
 
 @app.post("/game/round")
 def game_round(state: DeckState):

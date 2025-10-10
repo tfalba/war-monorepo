@@ -5,13 +5,33 @@ from typing import List, Dict, Tuple
 SUITS = ["♠", "♥", "♦", "♣"]
 RANKS = list(range(2, 15))  # 2..14   (11=J,12=Q,13=K,14=A)
 FACE = {11: "J", 12: "Q", 13: "K", 14: "A"}
+CARDIMAGES = {
+    "♠": {2: "src/assets/playingDeck/2-S.png", 3: "src/assets/playingDeck/3-S.png", 4: "src/assets/playingDeck/4-S.png", 5: "src/assets/playingDeck/5-S.png", 6: "src/assets/playingDeck/6-S.png", 7: "src/assets/playingDeck/7-S.png", 8: "src/assets/playingDeck/8-S.png", 9: "src/assets/playingDeck/9-S.png", 10: "src/assets/playingDeck/10-S.png", 11: "src/assets/playingDeck/J-S.png", 12: "src/assets/playingDeck/Q-S.png", 13: "src/assets/playingDeck/K-S.png", 14: "src/assets/playingDeck/A-S.png"},
+    "♥": {2: "src/assets/playingDeck/2-H.png", 3: "src/assets/playingDeck/3-H.png", 4: "src/assets/playingDeck/4-H.png", 5: "src/assets/playingDeck/5-H.png", 6: "src/assets/playingDeck/6-H.png", 7: "src/assets/playingDeck/7-H.png", 8: "src/assets/playingDeck/8-H.png", 9: "src/assets/playingDeck/9-H.png", 10: "src/assets/playingDeck/10-H.png", 11: "src/assets/playingDeck/J-H.png", 12: "src/assets/playingDeck/Q-H.png", 13: "src/assets/playingDeck/K-H.png", 14: "src/assets/playingDeck/A-H.png"},
+    "♦": {2: "src/assets/playingDeck/2-D.png", 3: "src/assets/playingDeck/3-D.png", 4: "src/assets/playingDeck/4-D.png", 5: "src/assets/playingDeck/5-D.png", 6: "src/assets/playingDeck/6-D.png", 7: "src/assets/playingDeck/7-D.png", 8: "src/assets/playingDeck/8-D.png", 9: "src/assets/playingDeck/9-D.png", 10: "src/assets/playingDeck/10-D.png", 11: "src/assets/playingDeck/J-D.png", 12: "src/assets/playingDeck/Q-D.png", 13: "src/assets/playingDeck/K-D.png", 14: "src/assets/playingDeck/A-D.png"},
+    "♣": {2: "src/assets/playingDeck/2-C.png", 3: "src/assets/playingDeck/3-C.png", 4: "src/assets/playingDeck/4-C.png", 5: "src/assets/playingDeck/5-C.png", 6: "src/assets/playingDeck/6-C.png", 7: "src/assets/playingDeck/7-C.png", 8: "src/assets/playingDeck/8-C.png", 9: "src/assets/playingDeck/9-C.png", 10: "src/assets/playingDeck/10-C.png", 11: "src/assets/playingDeck/J-C.png", 12: "src/assets/playingDeck/Q-C.png", 13: "src/assets/playingDeck/K-C.png", 14: "src/assets/playingDeck/A-C.png"},
+}
 
 def display_card(card: Dict) -> str:
     rank = FACE.get(card["num"], str(card["num"]))
+    cardImage = CARDIMAGES[card["suit"]][card["num"]]
     return f"{rank}{card['suit']}"
 
 def build_deck() -> List[Dict]:
-    return [{"suit": s, "num": r} for s in SUITS for r in RANKS]
+    return [{"suit": s, "num": r, "image": CARDIMAGES[s][r]} for s in SUITS for r in RANKS]
+
+def double_deck_shuffled() -> List[Dict]:
+    deck = build_deck() + build_deck()
+    return random.sample(deck, len(deck))
+
+def start_bj(deck: List[Dict]):
+    qDeck = deque(deck)
+    p1=qDeck.popleft()
+    print(p1)
+    d1=qDeck.popleft()
+    p2=qDeck.popleft()
+    d2=qDeck.popleft()
+    return {"playerCards": [p1, p2], "dealerCards": [d1, d2], "deck": list(qDeck)}
 
 def split_shuffled_decks() -> Tuple[List[Dict], List[Dict]]:
     deck = build_deck()
