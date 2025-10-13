@@ -2,18 +2,24 @@ import { useEffect } from "react";
 import type { Card } from "./../api";
 import winArrow from "./../assets/win-arrow.png";
 import pokerBackground from "./../assets/poker-background.jpg";
+import blackBackground from "./../assets/black-wavy-background.png";
 import "./../App.css";
 import { useGameHelpers } from "./../hooks/useGameHelpers";
 import GameButtons from "./GameButtons";
+import clearHand from "./../assets/clear-hand.png";
+import newGame from "./../assets/new-game-2.png";
+import continuePlay from "./../assets/continue-play-2.png";
+// import newRound from "./../assets/new-round.png";
+// import newRound from "./../assets/new-round-2.png";
+// import newRound from "./../assets/new-round-3.png";
+import newRound from "./../assets/new-round-4.png";
+import warTitle from "./../assets/war-title.png";
+
+
+
 import { CardView } from "./CardView";
 
-
-
-export default function War({
-  handleGameChange,
-}: {
-  handleGameChange: () => void;
-}) {
+export default function War({}: {}) {
   const {
     handleStart,
     handleClear,
@@ -37,24 +43,39 @@ export default function War({
     handleStart();
   }, []);
 
+  const handlePlay =
+    cardA && cardB ? (warRound ? handleWar : handleClear) : handleRound;
   return (
     <div className={"war-container"}>
       <img
-        src={pokerBackground}
+        src={blackBackground}
         alt="Green felt background"
         className="image-background"
       />
-      <GameButtons
-        handleGameChange={handleGameChange}
-        handleStart={handleStart}
-      />
-      <p
-        className="title-display"
-      >
-        {log
-          ? `${log}${roundNumber > 0 ? ` Round ${roundNumber}` : ""}`
-          : ` Begin Round ${roundNumber + 1}`}
-      </p>
+            <img src={warTitle} style={{width: '240px', position: 'absolute', top: 0, left: '30%'}} alt="Black Jack"></img>
+
+
+      <div style = {{ display: 'flex', position: 'absolute', top: 10, right: 200}}>
+        <div onClick={handleStart}>
+          {prevDeckA && prevDeckB ? (
+            <img style={{ width: 140 }} src={newRound} alt="New Round" />
+          ) : (
+            <img style={{ width: 140 }} src={newGame} alt="Start Game" />
+          )}
+        </div>
+
+        <div onClick={handlePlay}>
+          {cardA && cardB ? (
+            <img style={{ width: 140 }} src={clearHand} alt="Clear Hand" />
+          ) : (
+            <img
+              style={{ width: 140 }}
+              src={continuePlay}
+              alt="Continue Play"
+            />
+          )}
+        </div>
+      </div>
 
       {players.map((p) => (
         <DisplayPlayerDeck
@@ -77,7 +98,13 @@ export default function War({
         <div className="bonus-container">
           <strong>Bonus pile ({bonus.length}): </strong>
           {bonus.map((c, i) => (
-            <CardView showCard={true} key={i} idx={i} card={c} className="card-view" />
+            <CardView
+              showCard={true}
+              key={i}
+              idx={i}
+              card={c}
+              className="card-view"
+            />
           ))}
         </div>
       )}
@@ -115,30 +142,43 @@ function DisplayPlayerDeck({
   const handlePlay =
     cardA && cardB ? (warRound ? handleWar : handleClear) : handleRound;
   function showCardStatus(c: Card, i: number, classN: string) {
-    if ( c && (i < prevBonus.length + 2) && (winner || classN==='display-view')) {
+    if (
+      c &&
+      i < prevBonus.length + 2 &&
+      (winner || classN === "display-view")
+    ) {
       return true;
     } else return false;
   }
-    // cardA && cardB ? return true : return false}
+  // cardA && cardB ? return true : return false}
   return (
     <div
       className="player-container"
       style={{
-        marginTop: player === "A" ? 0 : 40,
+        marginTop: player === "A" ? 30 : 0,
       }}
     >
       <div
-        style={{ display: "flex", flexWrap: "wrap", gap: 8, flex: 2, marginLeft: 100 }}
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          gap: 8,
+          flex: 2,
+          marginLeft: 100,
+        }}
       >
         {[...cards].reverse().map((c, i) => (
           <CardView
             key={i}
             card={c}
             className="card-view"
-            showCard={showCardStatus(c, i, 'card-view')}
+            showCard={showCardStatus(c, i, "card-view")}
           />
         ))}
-        <span style={{ marginLeft: "8px", fontSize: "1.5em", placeContent: "center", height: '1em', marginTop: '1em', background: '#06902b'}}>
+        <span
+          className="total-style"
+          // style={{ marginLeft: "8px", fontSize: "2rem", placeContent: "center", height: '3rem', width: '3rem', marginTop: '1rem', background: '#5469bf'}}
+        >
           {/* {"Total: "} */}
           {cards.length}
         </span>
@@ -148,7 +188,11 @@ function DisplayPlayerDeck({
         <CardView
           card={player === "A" ? cardA : cardB}
           className="display-view"
-          showCard={showCardStatus(player === "A" ? cardA : cardB, 0, 'display-view')}
+          showCard={showCardStatus(
+            player === "A" ? cardA : cardB,
+            0,
+            "display-view"
+          )}
         />
         {cardA &&
         cardB &&

@@ -2,9 +2,16 @@
   margin: 0 auto;
   text-align: center;
   min-height: 100vh;
-  background: #098b3478;
-  background: linear-gradient(135deg, #098b3478, #60c48178);
+  /* background: #098b3478; */
+  /* background: linear-gradient(135deg, #098b3478, #60c48178); */
   /* display: flex; */
+    /* background: url(https://www.transparenttextures.com/patterns/dark-mosaic.png),
+    linear-gradient(135deg, #0a0a0a52, #1b1b1bc2);
+  background: url(https://www.transparenttextures.com/patterns/dark-mosaic.png),
+    linear-gradient(135deg, #0a0a0a45, #1b1b1b54);
+    background: url(https://www.transparenttextures.com/patterns/dark-mosaic.png), linear-gradient(135deg, #0a0a0adb, #1b1b1bc2);
+  background-blend-mode: overlay; */
+  max-width: 1100px;
 }
 
 .logo {
@@ -37,23 +44,26 @@
 
 .card-view {
   border-radius: 8px;
-  max-width: 70px;
-  max-height: 96px;
+  max-width: 75px;
+  max-height: 114px;
   background: #fefcf5;
   box-shadow: 2px 2px 2px #74717163;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  padding: 3px;
 }
 
 .display-view {
   border-radius: 11px;
   max-width: 140px;
+  /* min-height: 205px; */
   background: #fefcf5;
   box-shadow: 2px 2px 6px #74717163;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  padding: 5px;
 }
 
 .card-buffer {
@@ -64,7 +74,8 @@
 }
 
 .button-style {
-  background-color: #1f9338;
+  background-color: #5469bf;
+  background-color: #484ae0ed;
   color: white;
   border: none;
   padding: 10px 20px;
@@ -73,27 +84,54 @@
   border: 2px solid #c6c1c1;
   box-shadow: 2px 2px 6px #dfd0cffa;
   min-width: 100px;
+  font-size: 1.5rem;
+    border: 1px solid #c6c1c1;
+    box-shadow: 2px 2px 6px #989191fa;
+}
+
+.round-button {
+  background: yellow;
+    color: green;
+    border-radius: 90px;
+    padding: 1rem;
+    height: 8rem;
+    width: 8rem;
+}
+
+.total-style {
+      margin-left: 8px;
+    font-size: 2rem;
+    place-content: center;
+    height: 3rem;
+    width: 3rem;
+    margin-top: 1rem;
+    background: rgb(84, 105, 191);
+    background: #badf61;
+;
+    border-radius: 25px;
+    padding: .2rem;
+    box-shadow: 2px 2px 6px #989191fa;
 }
 
 .war-container {
   font-family: "system-ui, sans-serif";
-  padding: 40px 40px 40px 45px;
+  padding: 80px 40px 40px 45px;
   margin: 0 auto;
   color: white;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 40px;
 }
 
 .black-marble {
   width: 100%;
   max-width: 1100px;
   /* background: url(https://www.transparenttextures.com/patterns/dark-mosaic.png),
-    linear-gradient(135deg, #0a0a0a52, #1b1b1bc2); */
+    linear-gradient(135deg, #0a0a0a52, #1b1b1bc2);
   background: url(https://www.transparenttextures.com/patterns/dark-mosaic.png),
     linear-gradient(135deg, #0a0a0a45, #1b1b1b54);
-  background-blend-mode: overlay;
-  margin: 5vw;
+  background-blend-mode: overlay; */
+  margin: 1vw;
   place-self: center;
 }
 
