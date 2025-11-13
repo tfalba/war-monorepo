@@ -100,12 +100,12 @@ export default function BlackJack() {
   }
 
   return (
-    <div className={"war-container"}>
-      <img
+    <div>
+      {/* <img
         src={blackBackground}
         alt="Green felt background"
         className="image-background"
-      />
+      /> */}
       <img
         src={blackJackTitle}
         style={{

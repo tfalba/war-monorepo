@@ -1,6 +1,8 @@
 import { useState } from "react";
 
 import "./App.css";
+import "./index.css";
+
 import War from "./components/War";
 import BlackJack from "./components/BlackJack";
 import switchGame from "./assets/switch-game-2.png";
@@ -13,7 +15,7 @@ export default function App() {
   }
 
   return (
-    <>
+        <div className="bg-felt bg-tablePattern shadow-insetFelt rounded-2xl p-8 text-gold">
       <div style={{ display: "flex", marginLeft: 40, marginTop: 40 }}>
         <img
           onClick={() =>
@@ -24,9 +26,9 @@ export default function App() {
           alt="Green felt background"
         />
       </div>
-      <div className="black-marble">
+      <div>
         {selectedGame === "War" ? <War /> : <BlackJack />}
       </div>
-    </>
+    </div>
   );
 }

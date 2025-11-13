@@ -39,12 +39,14 @@ export default function War({}: {}) {
   const handlePlay =
     cardA && cardB ? (warRound ? handleWar : handleClear) : handleRound;
   return (
-    <div className={"war-container"}>
-      <img
+    // <div className={"war-container"}>
+              <div>
+
+      {/* <img
         src={blackBackground}
         alt="Green felt background"
         className="image-background"
-      />
+      /> */}
       <img
         src={warTitle}
         style={{

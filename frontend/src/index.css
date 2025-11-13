@@ -1,3 +1,25 @@
+@import "tailwindcss";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@theme {
+  --color-table: #0b5d3b;
+  --color-felt: #0d6b45;
+  --color-emeraldDeep: #025b38;
+
+  --color-chipRed: #c0392b;
+  --color-chipBlue: #2471a3;
+  --color-chipBlack: #1b1b1b;
+
+  --color-gold: #d4af37;
+  --color-silver: #dfe6e9;
+
+  --color-ink: #0e0e0e;
+  --color-paper: #fefefe;
+};
+
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
