@@ -89,7 +89,6 @@ export default function BlackJack() {
     if (deck.length === 0) return;
     const payload: BJDeckState = { deck };
     const data = await bjRound(payload);
-    console.log(data.playerCards, data,'player cards')
     setDeck(data.deck ?? []);
     setPlayerCards(data.playerCards ?? []);
     setDealerCards(data.dealerCards ?? []);
@@ -97,27 +96,37 @@ export default function BlackJack() {
   }
 
   async function playDealer() {
-    // const data = await playDealer(dealerCards, deck);
     setShowDealer(true);
   }
 
   return (
     <div className={"war-container"}>
-        <img
+      <img
         src={blackBackground}
         alt="Green felt background"
         className="image-background"
       />
-      <img src={blackJackTitle} style={{width: '30vw', position: 'absolute', top: '14vh', left: '34%'}} alt="Black Jack"></img>
+      <img
+        src={blackJackTitle}
+        style={{
+          width: "30vw",
+          position: "absolute",
+          top: "14vh",
+          left: "34%",
+        }}
+        alt="Black Jack"
+      ></img>
 
-      <div style = {{ display: 'flex', position: 'absolute', top: 40, right: '20%'}}>
+      <div
+        style={{ display: "flex", position: "absolute", top: 40, right: "20%" }}
+      >
         <div onClick={handleDeal}>
           {!showDealer &&
-              dealerCards.length === 0 &&
-              playerCards.length === 0  ? (
-            <img style={{ width: '15vw' }} src={newGame} alt="New Deal" />
+          dealerCards.length === 0 &&
+          playerCards.length === 0 ? (
+            <img style={{ width: "15vw" }} src={newGame} alt="New Deal" />
           ) : (
-            <img style={{ width: '15vw' }} src={newRound} alt="New Round" />
+            <img style={{ width: "15vw" }} src={newRound} alt="New Round" />
           )}
         </div>
       </div>
@@ -194,7 +203,6 @@ export default function BlackJack() {
           }}
         >
           <div style={{ display: "flex", gap: 14 }}>
-
             {dealerCards &&
               dealerCards.map((c, i) => (
                 <CardView
@@ -205,11 +213,7 @@ export default function BlackJack() {
                 />
               ))}
             {dealerCards && showDealer && (
-              <span
-                className="total-style"
-              >
-                {totalValue(dealerCards)}
-              </span>
+              <span className="total-style">{totalValue(dealerCards)}</span>
             )}
           </div>
           <div style={{ display: "flex", gap: 14 }}>
@@ -223,41 +227,37 @@ export default function BlackJack() {
                 />
               ))}
             {playerCards.length > 0 && (
-              <span
-                className="total-style"
-              >
-                {totalValue(playerCards)}
-              </span>
+              <span className="total-style">{totalValue(playerCards)}</span>
             )}
           </div>
           {showDealer ? (
-            <div style={{display: 'flex'}}>
+            <div style={{ display: "flex" }}>
               <button onClick={clearRound} className="button-style">
                 Clear
               </button>
             </div>
           ) : playerCards.length > 0 && dealerCards.length > 0 ? (
-            <div style={{display: 'flex'}}>
-                  <img
-                  onClick={playDealer}
-              style={{ width: '11vw' }}
-              src={hitButton}
-               alt="Hit"
-            />
-                  <img
-                  onClick={playDealer}
-              style={{ width: '13vw' }}
-              src={standButton}
-               alt="Stand"
-            />
+            <div style={{ display: "flex" }}>
+              <img
+                onClick={playDealer}
+                style={{ width: "11vw" }}
+                src={hitButton}
+                alt="Hit"
+              />
+              <img
+                onClick={playDealer}
+                style={{ width: "13vw" }}
+                src={standButton}
+                alt="Stand"
+              />
             </div>
-     
-          ) : 
-           <div style={{display: 'flex'}}>
+          ) : (
+            <div style={{ display: "flex" }}>
               <button onClick={handleDeal} className="button-style">
                 Play
               </button>
-            </div>}
+            </div>
+          )}
         </div>
       </div>
     </div>

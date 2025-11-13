@@ -2,15 +2,6 @@
   margin: 0 auto;
   text-align: center;
   min-height: 100vh;
-  /* background: #098b3478; */
-  /* background: linear-gradient(135deg, #098b3478, #60c48178); */
-  /* display: flex; */
-    /* background: url(https://www.transparenttextures.com/patterns/dark-mosaic.png),
-    linear-gradient(135deg, #0a0a0a52, #1b1b1bc2);
-  background: url(https://www.transparenttextures.com/patterns/dark-mosaic.png),
-    linear-gradient(135deg, #0a0a0a45, #1b1b1b54);
-    background: url(https://www.transparenttextures.com/patterns/dark-mosaic.png), linear-gradient(135deg, #0a0a0adb, #1b1b1bc2);
-  background-blend-mode: overlay; */
   max-width: 1100px;
 }
 
@@ -125,11 +116,6 @@
 .black-marble {
   width: 100%;
   max-width: 1100px;
-  /* background: url(https://www.transparenttextures.com/patterns/dark-mosaic.png),
-    linear-gradient(135deg, #0a0a0a52, #1b1b1bc2);
-  background: url(https://www.transparenttextures.com/patterns/dark-mosaic.png),
-    linear-gradient(135deg, #0a0a0a45, #1b1b1b54);
-  background-blend-mode: overlay; */
   margin: 1vw;
   place-self: center;
 }

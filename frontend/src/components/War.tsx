@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-// import type { Card } from "./../api";
 import winArrow from "./../assets/win-arrow.png";
 import blackBackground from "./../assets/black-wavy-background.png";
 import "./../App.css";
@@ -7,9 +6,6 @@ import { useGameHelpers } from "./../hooks/useGameHelpers";
 import clearHand from "./../assets/clear-hand.png";
 import newGame from "./../assets/new-game-2.png";
 import continuePlay from "./../assets/continue-play-2.png";
-// import newRound from "./../assets/new-round.png";
-// import newRound from "./../assets/new-round-2.png";
-// import newRound from "./../assets/new-round-3.png";
 import newRound from "./../assets/new-round-4.png";
 import warTitle from "./../assets/war-title.png";
 
@@ -17,7 +13,7 @@ import { CardView, PlayingCard } from "./CardView";
 import type { Card } from "../types";
 
 export default function War({}: {}) {
-    const [flipped, setFlipped] = useState(true);
+  const [flipped, setFlipped] = useState(true);
 
   const {
     handleStart,
@@ -40,9 +36,7 @@ export default function War({}: {}) {
     handleStart();
   }, []);
 
-  // const handlePlay =
-  //   cardA && cardB ? (warRound ? handleWar : handleClear) : handleRound;
-      const handlePlay =
+  const handlePlay =
     cardA && cardB ? (warRound ? handleWar : handleClear) : handleRound;
   return (
     <div className={"war-container"}>
@@ -51,24 +45,34 @@ export default function War({}: {}) {
         alt="Green felt background"
         className="image-background"
       />
-            <img src={warTitle} style={{width: '25vw', position: 'absolute', top: '14vh', left: '36%'}} alt="Black Jack"></img>
+      <img
+        src={warTitle}
+        style={{
+          width: "25vw",
+          position: "absolute",
+          top: "14vh",
+          left: "36%",
+        }}
+        alt="Black Jack"
+      ></img>
 
-
-      <div style = {{ display: 'flex', position: 'absolute', top: 40, right: '20%'}}>
+      <div
+        style={{ display: "flex", position: "absolute", top: 40, right: "20%" }}
+      >
         <div onClick={handleStart}>
           {prevDeckA && prevDeckB ? (
-            <img style={{ width: '15vw' }} src={newRound} alt="New Round" />
+            <img style={{ width: "15vw" }} src={newRound} alt="New Round" />
           ) : (
-            <img style={{ width: '15vw' }} src={newGame} alt="Start Game" />
+            <img style={{ width: "15vw" }} src={newGame} alt="Start Game" />
           )}
         </div>
 
         <div onClick={handlePlay}>
           {cardA && cardB ? (
-            <img style={{ width: '15vw' }} src={clearHand} alt="Clear Hand" />
+            <img style={{ width: "15vw" }} src={clearHand} alt="Clear Hand" />
           ) : (
             <img
-              style={{ width: '15vw' }}
+              style={{ width: "15vw" }}
               src={continuePlay}
               alt="Continue Play"
             />
@@ -155,7 +159,6 @@ function DisplayPlayerDeck({
       return true;
     } else return false;
   }
-  // cardA && cardB ? return true : return false}
   return (
     <div
       className="player-container"
@@ -181,50 +184,25 @@ function DisplayPlayerDeck({
             showCard={showCardStatus(c, i, "card-view")}
           />
         ))}
-        <span
-          className="total-style"
-          // style={{ marginLeft: "8px", fontSize: "2rem", placeContent: "center", height: '3rem', width: '3rem', marginTop: '1rem', background: '#5469bf'}}
-        >
-          {/* {"Total: "} */}
-          {cards.length}
-        </span>
+        <span className="total-style">{cards.length}</span>
       </div>
 
-      {/* <div className="card-buffer" onClick={handlePlay}>
-        <CardView
-          card={player === "A" ? cardA : cardB}
-          className="display-view"
-          showCard={showCardStatus(
-            player === "A" ? cardA : cardB,
-            0,
-            "display-view"
-          )}
-        />
-        {cardA &&
-        cardB &&
-        (player === "A" ? cardA.num > cardB.num : cardB.num > cardA.num) ? (
-          <img style={{ width: "70px" }} src={winArrow} alt="Win" />
-        ) : (
-          <span style={{ visibility: "hidden", width: "70px" }} />
-        )}
-      </div> */}
-
       <div className="card-buffer">
-        {cardA && cardB ?
-        <PlayingCard flipped={flipped} setFlipped={setFlipped} frontImg={player=== "A" ? cardA?.image : cardB?.image} handlePlay={handlePlay} />
-        : null }
-        {/* <CardView
-          card={player === "A" ? cardA : cardB}
-          className="display-view"
-          showCard={showCardStatus(
-            player === "A" ? cardA : cardB,
-            0,
-            "display-view"
-          )}
-        /> */}
-        {!flipped && cardA &&
-        cardB && cardA.num && cardB.num &&
-        ((player=="A" && (cardA.num > cardB.num)) || (player=="B" && (cardB.num > cardA.num))) ? (
+        {cardA && cardB ? (
+          <PlayingCard
+            flipped={flipped}
+            setFlipped={setFlipped}
+            frontImg={player === "A" ? cardA?.image : cardB?.image}
+            handlePlay={handlePlay}
+          />
+        ) : null}
+        {!flipped &&
+        cardA &&
+        cardB &&
+        cardA.num &&
+        cardB.num &&
+        ((player == "A" && cardA.num > cardB.num) ||
+          (player == "B" && cardB.num > cardA.num)) ? (
           <img style={{ width: "70px" }} src={winArrow} alt="Win" />
         ) : (
           <span style={{ visibility: "hidden", width: "70px" }} />

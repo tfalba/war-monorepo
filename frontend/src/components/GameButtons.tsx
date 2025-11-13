@@ -11,11 +11,6 @@ export default function GameButtons({
         {game === 'War' ? 'Switch to BJ' : 'Switch to War'}
       </button>
       <span>{game}</span>
-            {/* <button className="button-style" onClick={gameStarted ? () => handleStart(true) : () => handleStart(false)}> */}
-
-      {/* <button className="button-style" onClick={() => handleStart(!gameStarted)}>
-        {gameStarted ? 'New Round' : 'Start Game'}
-      </button> */}
     </div>
   );
 }
