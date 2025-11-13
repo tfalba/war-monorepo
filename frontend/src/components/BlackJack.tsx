@@ -75,40 +75,19 @@ export default function BlackJack({}: {}) {
         alt="Green felt background"
         className="image-background"
       />
-      <img src={blackJackTitle} style={{width: '350px', position: 'absolute', top: 0, left: '30%'}} alt="Black Jack"></img>
+      <img src={blackJackTitle} style={{width: '30vw', position: 'absolute', top: '14vh', left: '34%'}} alt="Black Jack"></img>
 
-      <div style = {{ display: 'flex', position: 'absolute', top: 10, right: 200}}>
+      <div style = {{ display: 'flex', position: 'absolute', top: 40, right: '20%'}}>
         <div onClick={handleDeal}>
           {!showDealer &&
               dealerCards.length === 0 &&
               playerCards.length === 0  ? (
-            <img style={{ width: 140 }} src={newGame} alt="New Deal" />
+            <img style={{ width: '15vw' }} src={newGame} alt="New Deal" />
           ) : (
-            <img style={{ width: 140 }} src={newRound} alt="New Round" />
+            <img style={{ width: '15vw' }} src={newRound} alt="New Round" />
           )}
         </div>
-
-        {/* <div onClick={handlePlay}>
-          {cardA && cardB ? (
-            <img style={{ width: 180 }} src={clearHand} alt="Clear Hand" />
-          ) : (
-            <img
-              style={{ width: 180 }}
-              src={continuePlay}
-              alt="Continue Play"
-            />
-          )}
-        </div> */}
       </div>
-      {/* <img
-        src={pokerBackground}
-        alt="Green felt background"
-        className="image-background"
-      /> */}
-      {/* <GameButtons
-        handleGameChange={handleGameChange}
-        handleStart={handleStart}
-      /> */}
       <div
         style={{
           display: "flex",
@@ -182,16 +161,6 @@ export default function BlackJack({}: {}) {
           }}
         >
           <div style={{ display: "flex", gap: 14 }}>
-            {/* {!showDealer &&
-              dealerCards.length === 0 &&
-              playerCards.length === 0 && (
-                <button
-                  onClick={handleDeal}
-                  className="button-style round-button"
-                >
-                  Play New Hand
-                </button>
-              )} */}
 
             {dealerCards &&
               dealerCards.map((c, i) => (
@@ -205,16 +174,6 @@ export default function BlackJack({}: {}) {
             {dealerCards && showDealer && (
               <span
                 className="total-style"
-                // style={{
-                //   marginLeft: "8px",
-                //   fontSize: "2rem",
-                //   placeContent: "center",
-                //   height: "3rem",
-                //   width: "3rem",
-                //   marginTop: "1em",
-                // //   background: "#5469bf",
-                //   background: "#363794",
-                // }}
               >
                 {totalValue(dealerCards)}
               </span>
@@ -233,71 +192,39 @@ export default function BlackJack({}: {}) {
             {playerCards.length > 0 && (
               <span
                 className="total-style"
-                // style={{
-                //   marginLeft: "8px",
-                //   fontSize: "2rem",
-                //   placeContent: "center",
-                //   height: "3rem",
-                //   width: "3rem",
-                //   marginTop: "1em",
-                // //   background: "#5469bf",
-                //     background: "#363794",
-
-                // }}
               >
                 {totalValue(playerCards)}
               </span>
             )}
           </div>
           {showDealer ? (
-            <div>
+            <div style={{display: 'flex'}}>
               <button onClick={clearRound} className="button-style">
                 Clear
               </button>
             </div>
           ) : playerCards.length > 0 && dealerCards.length > 0 ? (
-            <div>
+            <div style={{display: 'flex'}}>
                   <img
                   onClick={playDealer}
-              style={{ width: 122 }}
+              style={{ width: '11vw' }}
               src={hitButton}
                alt="Hit"
             />
                   <img
                   onClick={playDealer}
-              style={{ width: 140 }}
+              style={{ width: '13vw' }}
               src={standButton}
                alt="Stand"
             />
             </div>
-        //     <div onClick={handleStart}>
-        //   {prevDeckA && prevDeckB ? (
-        //     <img style={{ width: 180 }} src={newRound} alt="New Round" />
-        //   ) : (
-        //     <img style={{ width: 180 }} src={newGame} alt="Start Game" />
-        //   )}
-        // </div>
-
-        // <div onClick={handlePlay}>
-        //   {cardA && cardB ? (
-        //     <img style={{ width: 180 }} src={clearHand} alt="Clear Hand" />
-        //   ) : (
-        //     <img
-        //       style={{ width: 180 }}
-        //       src={continuePlay}
-        //       alt="Continue Play"
-        //     />
-        //   )}
-        // </div>
-            
-            // <div style={{ display: "flex", gap: 20 }}>
-            //   <button className="button-style">Hit</button>
-            //   <button onClick={playDealer} className="button-style">
-            //     Stand
-            //   </button>
-            
-            // </div>
-          ) : null}
+     
+          ) : 
+           <div style={{display: 'flex'}}>
+              <button onClick={handleDeal} className="button-style">
+                Play
+              </button>
+            </div>}
         </div>
       </div>
     </div>

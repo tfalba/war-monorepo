@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { Card } from "../api";
 // import deckBack from "./../assets/back-deck-new.png";
 import deckBack from "./../assets/new-card-back.png";
@@ -30,10 +31,41 @@ export function CardView({
       style={{ marginTop: `${topSpace*idx}px`, marginLeft: `${deckSpace}px` }}
     >
       <img
-        style={{ height: `${showCard && '105%'}`}}
+        // style={{ height: `${showCard && '105%'}`}}
+        style={{height: `${game === 'War' ? 110 : ''}`}}
         src={showCard ? card?.image : deckBack}
         alt={showCard ? txt : "deck back"}
       />
+    </div>
+  );
+}
+
+
+export function PlayingCard({ frontImg, flipped, setFlipped, handlePlay }: {frontImg: string, flipped: boolean, setFlipped: () => void, handlePlay: () => void}) {
+  // const [flipped, setFlipped] = useState(true);
+  const handlePlayTmp = (f: boolean) => {
+    console.log(f, 'flipped');
+    if (!f) {
+    setFlipped()
+    handlePlay()
+    } else {
+    setFlipped();
+    console.log(flipped, f, 'flipped after')
+    }
+  }
+
+  return (
+        <div className="scene" onClick={() => handlePlayTmp(flipped)} role="button" tabIndex={0}>
+
+    {/* // <div className="scene" onClick={() => setFlipped(!flipped)} role="button" tabIndex={0}> */}
+      <div className={`card ${flipped ? "is-flipped" : ""}`}>
+        <div className="card__face card__face--front">
+          <img src={frontImg} alt="Front of card" />
+        </div>
+        <div className="card__face card__face--back">
+          <img src={deckBack} alt="Back of card" />
+        </div>
+      </div>
     </div>
   );
 }

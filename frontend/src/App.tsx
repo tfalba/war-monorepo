@@ -43,11 +43,11 @@ export default function App() {
 
   return (
     <>
-      <div style={{display: 'flex', marginLeft: 40}} >
+      <div style={{display: 'flex', marginLeft: 40, marginTop: 40}} >
          
                  <img
                  onClick={() => toggleGame(selectedGame === 'War' ? 'Black Jack' : 'War')}
-                 style={{width: 140}}
+                 style={{width: '15vw'}}
         src={switchGame}
         alt="Green felt background"
       />

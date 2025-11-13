@@ -46,19 +46,19 @@
   border-radius: 8px;
   max-width: 75px;
   max-height: 114px;
-  background: #fefcf5;
+  /* background: #fefcf5; */
   box-shadow: 2px 2px 2px #74717163;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 3px;
+  /* padding: 3px; */
 }
 
 .display-view {
   border-radius: 11px;
   max-width: 140px;
   /* min-height: 205px; */
-  background: #fefcf5;
+  /* background: #fefcf5; */
   box-shadow: 2px 2px 6px #74717163;
   display: flex;
   flex-direction: column;
@@ -75,17 +75,16 @@
 
 .button-style {
   background-color: #5469bf;
-  background-color: #484ae0ed;
+  background-color: #badf61;
   color: white;
   border: none;
   padding: 10px 20px;
-  border-radius: 2px;
-  font-size: 1em;
+  border-radius: 20px;
   border: 2px solid #c6c1c1;
   box-shadow: 2px 2px 6px #dfd0cffa;
-  min-width: 100px;
-  font-size: 1.5rem;
-    border: 1px solid #c6c1c1;
+  min-width: 10vw;
+  font-size: 2rem;
+    border: 2px solid #c6c1c1;
     box-shadow: 2px 2px 6px #989191fa;
 }
 
@@ -115,7 +114,7 @@
 
 .war-container {
   font-family: "system-ui, sans-serif";
-  padding: 80px 40px 40px 45px;
+  padding: 18vh 40px 40px 45px;
   margin: 0 auto;
   color: white;
   display: flex;
@@ -159,6 +158,7 @@
   gap: 20px;
   justify-content: space-evenly;
   font-size: 1.5em;
+  min-height: 250px;
 }
 
 .title-display {
@@ -166,4 +166,59 @@
   text-align: center;
   font-size: 1.8em;
   height: 1em;
+}
+
+
+/* The 3D stage */
+.scene {
+  width: 140px;              /* adjust to your card size */
+  height: 200px;
+  perspective: 1000px;       /* controls 3D depth */
+  cursor: pointer;
+}
+
+/* The flipping element */
+.card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;        /* keep children in 3D space */
+  transition: transform 0.6s ease;     /* flip speed */
+}
+
+/* Apply the flip */
+.card.is-flipped {
+  transform: rotateY(180deg);
+}
+
+/* Faces */
+.card__face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;   /* hide the back when facing away */
+  -webkit-backface-visibility: hidden;
+  border-radius: 12px;
+  overflow: hidden;              /* clip image corners */
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+/* Front is default orientation */
+.card__face--front {}
+
+/* Back is rotated so it shows after flip */
+.card__face--back {
+  transform: rotateY(180deg);
+}
+
+/* Image reset */
+.card__face img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .card { transition: none; }
 }

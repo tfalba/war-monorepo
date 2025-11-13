@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import type { Card } from "./../api";
 import winArrow from "./../assets/win-arrow.png";
 import pokerBackground from "./../assets/poker-background.jpg";
@@ -17,9 +17,11 @@ import warTitle from "./../assets/war-title.png";
 
 
 
-import { CardView } from "./CardView";
+import { CardView, PlayingCard } from "./CardView";
 
 export default function War({}: {}) {
+    const [flipped, setFlipped] = useState(true);
+
   const {
     handleStart,
     handleClear,
@@ -43,7 +45,9 @@ export default function War({}: {}) {
     handleStart();
   }, []);
 
-  const handlePlay =
+  // const handlePlay =
+  //   cardA && cardB ? (warRound ? handleWar : handleClear) : handleRound;
+      const handlePlay =
     cardA && cardB ? (warRound ? handleWar : handleClear) : handleRound;
   return (
     <div className={"war-container"}>
@@ -52,24 +56,24 @@ export default function War({}: {}) {
         alt="Green felt background"
         className="image-background"
       />
-            <img src={warTitle} style={{width: '240px', position: 'absolute', top: 0, left: '30%'}} alt="Black Jack"></img>
+            <img src={warTitle} style={{width: '25vw', position: 'absolute', top: '14vh', left: '36%'}} alt="Black Jack"></img>
 
 
-      <div style = {{ display: 'flex', position: 'absolute', top: 10, right: 200}}>
+      <div style = {{ display: 'flex', position: 'absolute', top: 40, right: '20%'}}>
         <div onClick={handleStart}>
           {prevDeckA && prevDeckB ? (
-            <img style={{ width: 140 }} src={newRound} alt="New Round" />
+            <img style={{ width: '15vw' }} src={newRound} alt="New Round" />
           ) : (
-            <img style={{ width: 140 }} src={newGame} alt="Start Game" />
+            <img style={{ width: '15vw' }} src={newGame} alt="Start Game" />
           )}
         </div>
 
         <div onClick={handlePlay}>
           {cardA && cardB ? (
-            <img style={{ width: 140 }} src={clearHand} alt="Clear Hand" />
+            <img style={{ width: '15vw' }} src={clearHand} alt="Clear Hand" />
           ) : (
             <img
-              style={{ width: 140 }}
+              style={{ width: '15vw' }}
               src={continuePlay}
               alt="Continue Play"
             />
@@ -91,6 +95,8 @@ export default function War({}: {}) {
           warRound={warRound}
           winningPlayer={prevWinningPlayer}
           prevBonus={prevBonus}
+          flipped={flipped}
+          setFlipped={() => setFlipped(!flipped)}
         />
       ))}
 
@@ -124,6 +130,8 @@ function DisplayPlayerDeck({
   warRound,
   winningPlayer,
   prevBonus,
+  flipped,
+  setFlipped,
 }: {
   player: string;
   cardA: Card | null;
@@ -136,6 +144,8 @@ function DisplayPlayerDeck({
   warRound: boolean;
   winningPlayer: string | null;
   prevBonus: Card[];
+  flipped: boolean;
+  setFlipped: () => void;
 }) {
   const cards = player === "A" ? prevDeckA : prevDeckB;
   const winner = winningPlayer === player;
@@ -159,11 +169,12 @@ function DisplayPlayerDeck({
       }}
     >
       <div
+        onClick={handlePlay}
         style={{
           display: "flex",
           flexWrap: "wrap",
           gap: 8,
-          flex: 2,
+          flex: 1.5,
           marginLeft: 100,
         }}
       >
@@ -184,7 +195,7 @@ function DisplayPlayerDeck({
         </span>
       </div>
 
-      <div className="card-buffer" onClick={handlePlay}>
+      {/* <div className="card-buffer" onClick={handlePlay}>
         <CardView
           card={player === "A" ? cardA : cardB}
           className="display-view"
@@ -195,6 +206,28 @@ function DisplayPlayerDeck({
           )}
         />
         {cardA &&
+        cardB &&
+        (player === "A" ? cardA.num > cardB.num : cardB.num > cardA.num) ? (
+          <img style={{ width: "70px" }} src={winArrow} alt="Win" />
+        ) : (
+          <span style={{ visibility: "hidden", width: "70px" }} />
+        )}
+      </div> */}
+
+      <div className="card-buffer">
+        {cardA && cardB ?
+        <PlayingCard flipped={flipped} setFlipped={setFlipped} frontImg={player=== "A" ? cardA?.image : cardB?.image} handlePlay={handlePlay} />
+        : null }
+        {/* <CardView
+          card={player === "A" ? cardA : cardB}
+          className="display-view"
+          showCard={showCardStatus(
+            player === "A" ? cardA : cardB,
+            0,
+            "display-view"
+          )}
+        /> */}
+        {!flipped && cardA &&
         cardB &&
         (player === "A" ? cardA.num > cardB.num : cardB.num > cardA.num) ? (
           <img style={{ width: "70px" }} src={winArrow} alt="Win" />
