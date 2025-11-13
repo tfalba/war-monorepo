@@ -11,11 +11,11 @@ export default function App() {
     setSelectedGame((prev) => (prev === "War" ? "Black Jack" : "War"));
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-emeraldDeep via-felt to-table px-4 py-10 text-paper">
-      <div className="mx-auto flex max-w-[90rem] flex-col gap-10 rounded-[2.5rem] border border-white/10 bg-black/50 p-8 text-left shadow-card">
+    <div className="min-h-screen w-full bg-gradient-to-br from-emeraldDeep via-felt to-table text-paper">
+      <div className="mx-auto flex max-w-[100rem] flex-col gap-3 border border-white/10 bg-black/50 px-7 py-4 text-left shadow-card">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-gold/70">
+            <p className="text-lg uppercase font-semibold tracking-[0.35em] text-gold/90">
               Card Arcade
             </p>
             <h1 className="text-5xl font-display text-white">{selectedGame}</h1>

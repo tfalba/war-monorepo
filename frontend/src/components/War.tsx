@@ -95,10 +95,10 @@ export default function War() {
   // }, [cardA, cardB]);
 
   return (
-    <section className="space-y-8">
+    <section className="space-y-6">
       <header className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-black/30 p-6 shadow-insetFelt md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="text-sm uppercase tracking-[0.35em] text-gold/90">
+          <p className="text-lg font-semibold uppercase tracking-[0.35em] text-gold/90">
             Round {Math.max(roundNumber, 0) + 1}
           </p>
         </div>
@@ -112,7 +112,7 @@ export default function War() {
         </div>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_minmax(220px,0.8fr)_1fr]">
+      <div className="grid gap-6 lg:grid-cols-[1fr_minmax(290px,0.8fr)_1fr]">
         <DisplayPlayerDeck
           player="A"
           cardA={cardA}
@@ -215,7 +215,7 @@ function DisplayPlayerDeck({
     <section className="flex flex-col gap-5 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-soft">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.35em] text-white/70">
+          <p className="text-lg uppercase tracking-[0.35em] text-white/90 font-semibold">
             Player {player}
           </p>
           {winner && (
@@ -226,7 +226,8 @@ function DisplayPlayerDeck({
       </div>
 
       <div
-        className="flex flex-wrap items-start gap-2 cursor-pointer"
+        // className="flex flex-wrap items-start gap-2 cursor-pointer"
+        className="deck"
         onClick={handlePlay}
       >
         {[...cards].reverse().map((c, i) => (
@@ -282,11 +283,11 @@ function BattleArena({
   return (
     <div className={containerClass}>
       {warRound && battleRevealed && (
-        <div className="pointer-events-none absolute left-1/2 top-5 z-10 -translate-x-1/2 rotate-[-18deg] rounded-full bg-chipRed px-6 py-1 text-xs font-bold uppercase tracking-[0.6em] text-white shadow-card">
+        <div className="pointer-events-none absolute left-1/2 top-38 z-10 -translate-x-1/2 rotate-[-18deg] rounded-full bg-chipRed px-6 py-1 text-xs font-bold uppercase tracking-[0.6em] text-white shadow-card">
           WAR
         </div>
       )}
-      <p className={`text-xs uppercase tracking-[0.35em] pb-5 ${hasBattle ? "text-gold" : ""}`}>
+      <p className={`text-lg uppercase font-semibold tracking-[0.35em] pb-5 ${hasBattle ? "text-gold" : ""}`}>
         {hasBattle ? (warRound ? "WAR!" : "Battlefield") : "Battlefield"}
       </p>
       <div
@@ -366,7 +367,7 @@ function FlipCard({
   return (
     <div className="scene relative h-36 w-24">
       {highlight && <WinnerArrow direction={direction} />}
-      <div className={`card ${flipped ? "is-flipped" : ""}`}>
+      <div className={`card-flip ${flipped ? "is-flipped" : ""}`}>
         <div className="card__face card__face--front">
           <img src={deckBack} alt="Card back" />
         </div>

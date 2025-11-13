@@ -98,7 +98,7 @@ export default function BlackJack() {
     showDealer && (playerCards.length > 0 || dealerCards.length > 0);
 
   return (
-    <section className="space-y-8">
+    <section className="space-y-6">
       <header className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-black/30 p-6 shadow-insetFelt md:flex-row md:items-center md:justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.35em] text-gold/70">

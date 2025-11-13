@@ -8,7 +8,7 @@ const cardLabel = (card: Card) =>
 
 const variantClassMap: Record<CardVariant, string> = {
   stack:
-    "h-28 w-20 rounded-xl border border-white/10 bg-white/80 shadow-card overflow-hidden",
+    "h-28 rounded-xl shadow-card card",
   display:
     "h-48 w-32 rounded-2xl border border-gold/40 bg-white shadow-card overflow-hidden p-1",
   battle:
@@ -34,7 +34,7 @@ export function CardView({
   return (
     <div
       className={`${variantClassMap[variant]} ${className}`}
-      style={{ marginLeft: overlap }}
+      // style={{ marginLeft: overlap }}
     >
       <img
         className="h-full w-full rounded-[inherit] object-cover"
