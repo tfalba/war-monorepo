@@ -1,13 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { bjStart, bjRound } from "./../api";
-import "./../App.css";
 import { CardView } from "./CardView";
-import blackBackground from "./../assets/black-wavy-background.png";
-import newGame from "./../assets/new-game-2.png";
-import newRound from "./../assets/new-round-4.png";
-import standButton from "./../assets/stand-button.png";
-import hitButton from "./../assets/hit-button.png";
-import blackJackTitle from "./../assets/black-jack-title.png";
 import type { BJDeckState, Card } from "../types";
 
 const cardValue: Record<number, number> = {
@@ -62,17 +55,17 @@ export default function BlackJack() {
     cards.reduce((total, card) => total + calcValue(card), 0);
 
   function clearRound() {
-    if (playerCards.length === 0 && dealerCards.length === 0) {
-      return;
-    }
+    if (playerCards.length === 0 && dealerCards.length === 0) return;
     setDiscardDeck((prev) => [...playerCards, ...dealerCards, ...prev]);
     handleClear();
   }
+
   const handleClear = useCallback(() => {
     setPlayerCards([]);
     setDealerCards([]);
     setShowDealer(false);
   }, []);
+
   const handleStart = useCallback(async () => {
     setDeck([]);
     setDiscardDeck([]);
@@ -95,170 +88,136 @@ export default function BlackJack() {
     setShowDealer(false);
   }
 
-  async function playDealer() {
+  function playDealer() {
     setShowDealer(true);
   }
 
-  return (
-    <div>
-      {/* <img
-        src={blackBackground}
-        alt="Green felt background"
-        className="image-background"
-      /> */}
-      <img
-        src={blackJackTitle}
-        style={{
-          width: "30vw",
-          position: "absolute",
-          top: "14vh",
-          left: "34%",
-        }}
-        alt="Black Jack"
-      ></img>
+  const canReveal =
+    playerCards.length > 0 && dealerCards.length > 0 && !showDealer;
+  const canClear =
+    showDealer && (playerCards.length > 0 || dealerCards.length > 0);
 
-      <div
-        style={{ display: "flex", position: "absolute", top: 40, right: "20%" }}
-      >
-        <div onClick={handleDeal}>
-          {!showDealer &&
-          dealerCards.length === 0 &&
-          playerCards.length === 0 ? (
-            <img style={{ width: "15vw" }} src={newGame} alt="New Deal" />
-          ) : (
-            <img style={{ width: "15vw" }} src={newRound} alt="New Round" />
-          )}
+  return (
+    <section className="space-y-8">
+      <header className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-black/30 p-6 shadow-insetFelt md:flex-row md:items-center md:justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-[0.35em] text-gold/70">
+            Casino Mode
+          </p>
+          <h2 className="text-4xl font-display text-white">Blackjack</h2>
+          <p className="text-sm text-white/70">
+            Deck size: {deck.length.toString().padStart(2, "0")} cards
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <button
+            className="btn btn-primary"
+            onClick={handleDeal}
+            disabled={deck.length === 0}
+          >
+            {playerCards.length === 0 ? "Deal Cards" : "Deal Next Round"}
+          </button>
+          <button
+            className="btn btn-accent"
+            onClick={playDealer}
+            disabled={!canReveal}
+          >
+            Reveal Dealer
+          </button>
+          <button
+            className="btn btn-outline"
+            onClick={clearRound}
+            disabled={!canClear}
+          >
+            Clear Table
+          </button>
+        </div>
+      </header>
+
+      <div className="grid gap-8 lg:grid-cols-[1fr,2fr]">
+        <div className="space-y-6">
+          <PilePanel title="Draw Pile" subtitle={`${deck.length} left`}>
+            {[...deck].reverse().map((c, i) => (
+              <CardView key={i} idx={i} card={c} variant="stack" />
+            ))}
+          </PilePanel>
+
+          <PilePanel title="Discard" subtitle={`${discardDeck.length} burned`}>
+            {[...discardDeck].reverse().map((c, i) => (
+              <CardView key={i} idx={i} card={c} variant="stack" showCard />
+            ))}
+          </PilePanel>
+        </div>
+
+        <div className="flex flex-col gap-8 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-soft">
+          <Hand
+            label="Dealer"
+            cards={dealerCards}
+            total={totalValue(dealerCards)}
+            showFirst={showDealer}
+          />
+          <Hand
+            label="Player"
+            cards={playerCards}
+            total={totalValue(playerCards)}
+            showFirst
+          />
         </div>
       </div>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-around",
-          alignItems: "flex-start",
-          gap: 40,
-          marginTop: 40,
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 30,
-            minHeight: 500,
-            marginLeft: 50,
-            justifyContent: "space-between",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 1,
-              //   flex: 3,
-              marginLeft: 50,
-              marginRight: 80,
-            }}
-          >
-            {[...deck].reverse().map((c, i) => (
-              <CardView
-                key={i}
-                idx={i}
-                card={c}
-                className="card-view"
-                game="Black Jack"
-              />
-            ))}
-          </div>
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 10,
-              //   flex: 3,
-              marginLeft: 50,
-              marginRight: 80,
-            }}
-          >
-            {[...discardDeck].reverse().map((c, i) => (
-              <CardView
-                key={i}
-                idx={i}
-                card={c}
-                className="card-view"
-                game="Black Jack"
-                showCard={true}
-              />
-            ))}
-          </div>
-        </div>
-        <div
-          style={{
-            display: "flex",
-            flex: 2,
-            flexDirection: "column",
-            gap: 20,
-            minHeight: 480,
-            minWidth: 400,
-            justifyContent: "flex-end",
-          }}
-        >
-          <div style={{ display: "flex", gap: 14 }}>
-            {dealerCards &&
-              dealerCards.map((c, i) => (
-                <CardView
-                  key={i}
-                  card={c}
-                  className="display-view"
-                  showCard={i === 0 ? showDealer : true}
-                />
-              ))}
-            {dealerCards && showDealer && (
-              <span className="total-style">{totalValue(dealerCards)}</span>
-            )}
-          </div>
-          <div style={{ display: "flex", gap: 14 }}>
-            {playerCards &&
-              playerCards.map((c, i) => (
-                <CardView
-                  key={i}
-                  card={c}
-                  className="display-view"
-                  showCard={true}
-                />
-              ))}
-            {playerCards.length > 0 && (
-              <span className="total-style">{totalValue(playerCards)}</span>
-            )}
-          </div>
-          {showDealer ? (
-            <div style={{ display: "flex" }}>
-              <button onClick={clearRound} className="button-style">
-                Clear
-              </button>
-            </div>
-          ) : playerCards.length > 0 && dealerCards.length > 0 ? (
-            <div style={{ display: "flex" }}>
-              <img
-                onClick={playDealer}
-                style={{ width: "11vw" }}
-                src={hitButton}
-                alt="Hit"
-              />
-              <img
-                onClick={playDealer}
-                style={{ width: "13vw" }}
-                src={standButton}
-                alt="Stand"
-              />
-            </div>
-          ) : (
-            <div style={{ display: "flex" }}>
-              <button onClick={handleDeal} className="button-style">
-                Play
-              </button>
-            </div>
-          )}
-        </div>
+    </section>
+  );
+}
+
+function PilePanel({
+  title,
+  subtitle,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="rounded-3xl border border-white/10 bg-black/30 p-4 shadow-soft">
+      <div className="flex items-center justify-between">
+        <p className="text-xs uppercase tracking-[0.35em] text-white/70">
+          {title}
+        </p>
+        {subtitle && <span className="text-sm text-white/60">{subtitle}</span>}
+      </div>
+      <div className="mt-4 flex flex-wrap gap-1">{children}</div>
+    </div>
+  );
+}
+
+function Hand({
+  label,
+  cards,
+  total,
+  showFirst,
+}: {
+  label: string;
+  cards: Card[];
+  total: number;
+  showFirst?: boolean;
+}) {
+  return (
+    <div>
+      <div className="mb-3 flex items-center justify-between">
+        <p className="text-sm uppercase tracking-[0.35em] text-white/70">
+          {label}
+        </p>
+        {cards.length > 0 && <span className="card-total">{total}</span>}
+      </div>
+      <div className="flex flex-wrap gap-3">
+        {cards.map((card, idx) => (
+          <CardView
+            key={`${label}-${idx}`}
+            card={card}
+            variant="display"
+            showCard={idx === 0 ? showFirst : true}
+          />
+        ))}
       </div>
     </div>
   );

@@ -1,25 +1,20 @@
 import { useEffect, useState } from "react";
-import winArrow from "./../assets/win-arrow.png";
-import blackBackground from "./../assets/black-wavy-background.png";
-import "./../App.css";
 import { useGameHelpers } from "./../hooks/useGameHelpers";
-import clearHand from "./../assets/clear-hand.png";
-import newGame from "./../assets/new-game-2.png";
-import continuePlay from "./../assets/continue-play-2.png";
-import newRound from "./../assets/new-round-4.png";
-import warTitle from "./../assets/war-title.png";
 
 import { CardView, PlayingCard } from "./CardView";
 import type { Card } from "../types";
 
-export default function War({}: {}) {
+export default function War() {
   const [flipped, setFlipped] = useState(true);
+  const toggleFlipped = () => setFlipped((prev) => !prev);
 
   const {
     handleStart,
     handleClear,
     handleRound,
     handleWar,
+    deckA,
+    deckB,
     prevDeckA,
     prevDeckB,
     cardA,
@@ -28,94 +23,77 @@ export default function War({}: {}) {
     prevBonus,
     warRound,
     prevWinningPlayer,
+    roundNumber,
   } = useGameHelpers();
 
   const players = ["A", "B"];
 
   useEffect(() => {
     handleStart();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handlePlay =
     cardA && cardB ? (warRound ? handleWar : handleClear) : handleRound;
+  const actionLabel = cardA && cardB ? (warRound ? "Resolve War" : "Clear Hand") : "Play Round";
+  const canPlay = deckA.length > 0 && deckB.length > 0;
+
   return (
-    // <div className={"war-container"}>
-              <div>
-
-      {/* <img
-        src={blackBackground}
-        alt="Green felt background"
-        className="image-background"
-      /> */}
-      <img
-        src={warTitle}
-        style={{
-          width: "25vw",
-          position: "absolute",
-          top: "14vh",
-          left: "36%",
-        }}
-        alt="Black Jack"
-      ></img>
-
-      <div
-        style={{ display: "flex", position: "absolute", top: 40, right: "20%" }}
-      >
-        <div onClick={handleStart}>
-          {prevDeckA && prevDeckB ? (
-            <img style={{ width: "15vw" }} src={newRound} alt="New Round" />
-          ) : (
-            <img style={{ width: "15vw" }} src={newGame} alt="Start Game" />
-          )}
+    <section className="space-y-8">
+      <header className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-black/30 p-6 shadow-insetFelt md:flex-row md:items-center md:justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-[0.35em] text-gold/70">
+            Round {Math.max(roundNumber, 0) + 1}
+          </p>
+          {/* <h2 className="text-4xl font-display text-white">War</h2>
+          <p className="text-sm text-white/70">
+            Round {Math.max(roundNumber, 0) + 1}
+          </p> */}
         </div>
-
-        <div onClick={handlePlay}>
-          {cardA && cardB ? (
-            <img style={{ width: "15vw" }} src={clearHand} alt="Clear Hand" />
-          ) : (
-            <img
-              style={{ width: "15vw" }}
-              src={continuePlay}
-              alt="Continue Play"
-            />
-          )}
+        <div className="flex flex-wrap gap-3">
+          <button className="btn btn-outline" onClick={handleStart}>
+            {roundNumber > 0 ? "Restart Game" : "Start Game"}
+          </button>
+          <button className="btn btn-primary" onClick={handlePlay} disabled={!canPlay}>
+            {actionLabel}
+          </button>
         </div>
+      </header>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        {players.map((p) => (
+          <DisplayPlayerDeck
+            key={p}
+            player={p}
+            cardA={cardA}
+            cardB={cardB}
+            handleRound={handleRound}
+            handleWar={handleWar}
+            handleClear={handleClear}
+            prevDeckA={prevDeckA}
+            prevDeckB={prevDeckB}
+            warRound={warRound}
+            winningPlayer={prevWinningPlayer}
+            prevBonus={prevBonus}
+            flipped={flipped}
+            setFlipped={toggleFlipped}
+          />
+        ))}
       </div>
 
-      {players.map((p) => (
-        <DisplayPlayerDeck
-          key={p}
-          player={p}
-          cardA={cardA}
-          cardB={cardB}
-          handleRound={handleRound}
-          handleWar={handleWar}
-          handleClear={handleClear}
-          prevDeckA={prevDeckA}
-          prevDeckB={prevDeckB}
-          warRound={warRound}
-          winningPlayer={prevWinningPlayer}
-          prevBonus={prevBonus}
-          flipped={flipped}
-          setFlipped={() => setFlipped(!flipped)}
-        />
-      ))}
-
       {bonus && bonus.length > 0 && (
-        <div className="bonus-container">
-          <strong>Bonus pile ({bonus.length}): </strong>
-          {bonus.map((c, i) => (
-            <CardView
-              showCard={true}
-              key={i}
-              idx={i}
-              card={c}
-              className="card-view"
-            />
-          ))}
+        <div className="rounded-3xl border border-gold/25 bg-black/30 p-4 shadow-soft">
+          <p className="text-xs uppercase tracking-[0.35em] text-gold">
+            Bonus pile ({bonus.length})
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {bonus.map((c, i) => (
+              <CardView key={i} idx={i} card={c} variant="stack" showCard />
+            ))}
+          </div>
         </div>
       )}
-    </div>
+    </section>
   );
 }
 
@@ -152,64 +130,62 @@ function DisplayPlayerDeck({
   const winner = winningPlayer === player;
   const handlePlay =
     cardA && cardB ? (warRound ? handleWar : handleClear) : handleRound;
-  function showCardStatus(c: Card, i: number, classN: string) {
-    if (
-      c &&
-      i < prevBonus.length + 2 &&
-      (winner || classN === "display-view")
-    ) {
-      return true;
-    } else return false;
-  }
+
+  const showCardStatus = (card: Card, index: number, variant: "stack" | "display") =>
+    Boolean(
+      card &&
+        index < prevBonus.length + 2 &&
+        (winner || variant === "display")
+    );
+
+  const currentCard = player === "A" ? cardA : cardB;
+  const opponentCard = player === "A" ? cardB : cardA;
+  const hasFaceoff = Boolean(cardA && cardB);
+
   return (
-    <div
-      className="player-container"
-      style={{
-        marginTop: player === "A" ? 30 : 0,
-      }}
-    >
+    <section className="flex flex-col gap-5 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-soft">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-[0.35em] text-white/70">
+            Player {player}
+          </p>
+          {winner && (
+            <p className="text-sm font-semibold text-gold">Won last battle</p>
+          )}
+        </div>
+        <span className="card-total">{cards.length}</span>
+      </div>
+
       <div
+        className="flex flex-wrap items-start gap-2 cursor-pointer"
         onClick={handlePlay}
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          gap: 8,
-          flex: 1.5,
-          marginLeft: 100,
-        }}
       >
         {[...cards].reverse().map((c, i) => (
           <CardView
             key={i}
             card={c}
-            className="card-view"
-            showCard={showCardStatus(c, i, "card-view")}
+            idx={i}
+            variant="stack"
+            showCard={showCardStatus(c, i, "stack")}
           />
         ))}
-        <span className="total-style">{cards.length}</span>
       </div>
 
-      <div className="card-buffer">
-        {cardA && cardB ? (
+      {hasFaceoff && currentCard && opponentCard && (
+        <div className="flex items-center gap-4">
           <PlayingCard
             flipped={flipped}
             setFlipped={setFlipped}
-            frontImg={player === "A" ? cardA?.image : cardB?.image}
+            frontImg={currentCard.image}
             handlePlay={handlePlay}
           />
-        ) : null}
-        {!flipped &&
-        cardA &&
-        cardB &&
-        cardA.num &&
-        cardB.num &&
-        ((player == "A" && cardA.num > cardB.num) ||
-          (player == "B" && cardB.num > cardA.num)) ? (
-          <img style={{ width: "70px" }} src={winArrow} alt="Win" />
-        ) : (
-          <span style={{ visibility: "hidden", width: "70px" }} />
-        )}
-      </div>
-    </div>
+          {!flipped && winner && (
+            <span className="rounded-full border border-gold/50 px-4 py-1 text-xs font-semibold uppercase tracking-[0.35em] text-gold">
+              Winner
+            </span>
+          )}
+        </div>
+      )}
+    </section>
   );
 }

@@ -1,10 +1,9 @@
+/* Tailwind v4 entry */
 @import "tailwindcss";
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
+/* v4-native tokens: colors, shadows, radii, fonts, etc. */
 @theme {
+  /* Colors */
   --color-table: #0b5d3b;
   --color-felt: #0d6b45;
   --color-emeraldDeep: #025b38;
@@ -18,73 +17,78 @@
 
   --color-ink: #0e0e0e;
   --color-paper: #fefefe;
-};
 
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+  /* Shadows (so `shadow-card`, `shadow-soft`, `shadow-insetFelt` work) */
+  --shadow-card: 0 8px 20px rgba(0,0,0,0.3);
+  --shadow-soft: 0 4px 16px rgba(0,0,0,0.15);
+  --shadow-insetFelt: inset 0 3px 8px rgba(0,0,0,0.4);
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  /* Radius (override 2xl to 1.25rem) */
+  --radius-2xl: 1.25rem;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* Fonts */
+  --font-sans: "Montserrat", ui-sans-serif, system-ui;
+  --font-display: "Belleza", sans-serif;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
+/* Base styles */
+@layer base {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    font-family: var(--font-sans);
+    font-weight: 400;
+    color: var(--color-paper);
   }
-  a:hover {
-    color: #747bff;
+
+  body {
+    margin: 0;
+    @apply min-h-screen w-full bg-gradient-to-br from-emeraldDeep via-felt to-table text-paper antialiased;
   }
-  button {
-    background-color: #f9f9f9;
+
+  #root {
+    @apply min-h-screen w-full;
   }
+}
+
+/* Utilities/components */
+@layer utilities {
+  /* Table pattern utility (v4: easiest is to define a class) */
+  .bg-tablePattern {
+    background-image: radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold uppercase tracking-[0.2em] transition
+      shadow-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-40;
+  }
+
+  .btn-primary {
+    @apply bg-gold text-emeraldDeep hover:bg-yellow-300 focus-visible:outline-gold;
+  }
+
+  .btn-outline {
+    @apply border border-gold/60 text-gold hover:bg-gold/10 focus-visible:outline-gold;
+  }
+
+  .btn-accent {
+    @apply bg-chipBlue text-white hover:bg-chipBlue/90 focus-visible:outline-chipBlue;
+  }
+
+  .btn-ghost {
+    @apply bg-transparent text-paper hover:bg-white/10 focus-visible:outline-paper/70;
+  }
+
+  .card-total {
+    @apply inline-flex h-12 w-12 items-center justify-center rounded-full bg-gold/90 text-emeraldDeep font-semibold shadow-card;
+  }
+
+  /* Flip-card helpers (kept from your file) */
+  .scene { width: 140px; height: 200px; perspective: 1000px; cursor: pointer; }
+  .card { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform 0.6s ease; }
+  .card.is-flipped { transform: rotateY(180deg); }
+  .card__face { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+  .card__face--back { transform: rotateY(180deg); }
+  .card__face img { width: 100%; height: 100%; object-fit: cover; display: block; }
 }

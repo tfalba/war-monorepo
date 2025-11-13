@@ -6,12 +6,11 @@ export default function GameButtons({
   game: string;
 }) {
   return (
-    <div style={{ display: "flex", gap: 20, justifyContent: "space-between" }}>
-      <button className="button-style" onClick={handleGameChange}>
+    <div className="flex items-center justify-between gap-5">
+      <button className="btn btn-primary" onClick={handleGameChange}>
         {game === 'War' ? 'Switch to BJ' : 'Switch to War'}
       </button>
       <span>{game}</span>
     </div>
   );
 }
-

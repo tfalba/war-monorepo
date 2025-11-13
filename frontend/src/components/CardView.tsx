@@ -1,35 +1,43 @@
 import deckBack from "./../assets/new-card-back.png";
 import type { Card } from "../types";
 
-const show = (c: Card) => `${c ? (c.rank ?? c.rank) + c.suit : null}`;
+type CardVariant = "stack" | "display";
+
+const cardLabel = (card: Card) =>
+  `${card ? `${card.rank ?? card.num ?? ""}${card.suit ?? ""}` : ""}`;
+
+const variantClassMap: Record<CardVariant, string> = {
+  stack:
+    "h-28 w-20 rounded-xl border border-white/10 bg-white/80 shadow-card overflow-hidden",
+  display:
+    "h-48 w-32 rounded-2xl border border-gold/40 bg-white shadow-card overflow-hidden p-1",
+};
 
 export function CardView({
   card,
   idx = 0,
-  className,
-  game = "War",
+  variant = "stack",
   showCard = false,
+  className = "",
 }: {
   card: Card;
   idx?: number;
-  className?: string;
-  game?: string;
+  variant?: CardVariant;
   showCard?: boolean;
+  className?: string;
 }) {
-  const txt = show(card);
-  const gameDeckSpace = game === "War" ? -60 : -74;
-  const deckSpace = className === "card-view" ? gameDeckSpace : 0;
-  const topSpace = game === "Black Jack" && className === "card-view" ? 0 : 0;
+  const txt = cardLabel(card);
+  const overlap = variant === "stack" && idx > 0 ? -36 : 0;
 
   return (
     <div
-      className={`${className}`}
-      style={{ marginTop: `${topSpace * idx}px`, marginLeft: `${deckSpace}px` }}
+      className={`${variantClassMap[variant]} ${className}`}
+      style={{ marginLeft: overlap }}
     >
       <img
-        style={{ height: `${game === "War" ? 110 : ""}` }}
+        className="h-full w-full rounded-[inherit] object-cover"
         src={showCard ? card?.image : deckBack}
-        alt={showCard ? txt : "deck back"}
+        alt={showCard ? txt : "Card back"}
       />
     </div>
   );
@@ -46,14 +54,10 @@ export function PlayingCard({
   setFlipped: () => void;
   handlePlay: () => void;
 }) {
-  const handlePlayTmp = (f: boolean) => {
-    console.log(f, "flipped");
-    if (!f) {
-      setFlipped();
+  const handlePlayTmp = (isFlipped: boolean) => {
+    setFlipped();
+    if (!isFlipped) {
       handlePlay();
-    } else {
-      setFlipped();
-      console.log(flipped, f, "flipped after");
     }
   };
 
