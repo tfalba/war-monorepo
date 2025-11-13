@@ -1,11 +1,11 @@
 import { useState } from "react";
-import type { Card } from "../api";
 // import deckBack from "./../assets/back-deck-new.png";
-import deckBack from "./../assets/new-card-back.png";
+// import deckBack from "./../assets/new-card-back.png";
+import deckBack from "./../assets/new-card-back.png"
+import type { Card } from "../types";
 
 
-const face: Record<number, string> = { 11: "J", 12: "Q", 13: "K", 14: "A" };
-const show = (c: Card) => `${c ? (face[c.num] ?? c.num) + c.suit : null}`;
+const show = (c: Card) => `${c ? (c.rank ?? c.rank) + c.suit : null}`;
 
 export function CardView({
   card,

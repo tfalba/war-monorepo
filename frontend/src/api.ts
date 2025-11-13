@@ -1,42 +1,26 @@
 import axios from "axios";
+import type {
+  DeckState,
+  WarRoundResult,
+  BJDeckState,
+  BJRoundResult,
+  WarStartResponse,
+} from "./types";
+export type { Card } from "./types";
 
 const api = axios.create({ baseURL: "/api" });
 
-export type Card = { suit: string; num: number, image: string } | null;
+export const startWar = () =>
+  api.get<WarStartResponse>("/game/start").then(r => r.data);
 
-export async function startGame() {
-  const { data } = await api.get("/game/start");
-  return data as { deckA: Card[]; deckB: Card[]; log: string };
-}
+export const playWarRound = (state: DeckState) =>
+  api.post<WarRoundResult>("/game/round", state).then(r => r.data);
 
-export async function playRound(deckA: Card[], deckB: Card[], bonus?: Card[]) {
-  const { data } = await api.post("/game/round", { deckA, deckB, bonus });
-  return data as {
-    deckA: Card[];
-    deckB: Card[];
-    result: "A" | "B" | "tie" | "game-over";
-    log: string;
-    bonus?: Card[];
-  };
-}
+export const resolveWar = (state: DeckState) =>
+  api.post<WarRoundResult>("/game/war", state).then(r => r.data);
 
-export async function war(deckA: Card[], deckB: Card[], bonus: Card[]) {
-  const { data } = await api.post("/game/war", { deckA, deckB, bonus });
-  return data as {
-    deckA: Card[];
-    deckB: Card[];
-    result: "A" | "B" | "tie_again" | "game-over";
-    log: string;
-    bonus?: Card[];
-  };
-}
+export const bjStart = () =>
+  api.get<BJDeckState>("/game/black-jack-start").then(r => r.data);
 
-export async function startBlackJackGame() {
-  const { data } = await api.get("/game/black-jack-start");
-  return data as { deck: Card[]; log: string };
-}
-
-export async function startBlackJackRound(deck: Card[]) {
-  const { data } = await api.post("/game/black-jack-round", {deck});
-  return data as { deck: Card[]; playerCards: Card[]; dealerCards: Card[]};
-}
+export const bjRound = (state: BJDeckState) =>
+  api.post<BJRoundResult>("/game/black-jack-round", state).then(r => r.data);

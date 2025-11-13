@@ -1,11 +1,9 @@
 import { useEffect, useState } from "react";
-import type { Card } from "./../api";
+// import type { Card } from "./../api";
 import winArrow from "./../assets/win-arrow.png";
-import pokerBackground from "./../assets/poker-background.jpg";
 import blackBackground from "./../assets/black-wavy-background.png";
 import "./../App.css";
 import { useGameHelpers } from "./../hooks/useGameHelpers";
-import GameButtons from "./GameButtons";
 import clearHand from "./../assets/clear-hand.png";
 import newGame from "./../assets/new-game-2.png";
 import continuePlay from "./../assets/continue-play-2.png";
@@ -15,9 +13,8 @@ import continuePlay from "./../assets/continue-play-2.png";
 import newRound from "./../assets/new-round-4.png";
 import warTitle from "./../assets/war-title.png";
 
-
-
 import { CardView, PlayingCard } from "./CardView";
+import type { Card } from "../types";
 
 export default function War({}: {}) {
     const [flipped, setFlipped] = useState(true);
@@ -35,8 +32,6 @@ export default function War({}: {}) {
     prevBonus,
     warRound,
     prevWinningPlayer,
-    log,
-    roundNumber,
   } = useGameHelpers();
 
   const players = ["A", "B"];
@@ -228,8 +223,8 @@ function DisplayPlayerDeck({
           )}
         /> */}
         {!flipped && cardA &&
-        cardB &&
-        (player === "A" ? cardA.num > cardB.num : cardB.num > cardA.num) ? (
+        cardB && cardA.num && cardB.num &&
+        ((player=="A" && (cardA.num > cardB.num)) || (player=="B" && (cardB.num > cardA.num))) ? (
           <img style={{ width: "70px" }} src={winArrow} alt="Win" />
         ) : (
           <span style={{ visibility: "hidden", width: "70px" }} />

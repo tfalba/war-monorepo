@@ -1,66 +1,99 @@
-import { useEffect, useState } from "react";
-import { startBlackJackGame, startBlackJackRound } from "./../api";
-import type { Card } from "./../api";
-import pokerBackground from "./../assets/poker-background.jpg";
+import { useCallback, useEffect, useState } from "react";
+import { bjStart, bjRound } from "./../api";
 import "./../App.css";
 import { CardView } from "./CardView";
-import GameButtons from "./GameButtons";
 import blackBackground from "./../assets/black-wavy-background.png";
-import clearHand from "./../assets/clear-hand.png";
 import newGame from "./../assets/new-game-2.png";
-import continuePlay from "./../assets/continue-play.png";
 import newRound from "./../assets/new-round-4.png";
 import standButton from "./../assets/stand-button.png";
 import hitButton from "./../assets/hit-button.png";
-import blackJackTitle from "./../assets/black-jack-title.png"
+import blackJackTitle from "./../assets/black-jack-title.png";
+import type { BJDeckState, Card } from "../types";
 
+const cardValue: Record<number, number> = {
+  2: 2,
+  3: 3,
+  4: 4,
+  5: 5,
+  6: 6,
+  7: 7,
+  8: 8,
+  9: 9,
+  10: 10,
+  11: 10,
+  12: 10,
+  13: 10,
+  14: 11,
+};
 
-const cardValue: Record<number, number> = { 11: 10, 12: 10, 13: 10, 14: 11 };
-const calcValue = (c: Card) => (c ? cardValue[c.num] ?? c?.num : 0);
+const faceLookup: Record<string, number> = {
+  J: 10,
+  Q: 10,
+  K: 10,
+  A: 11,
+};
 
-export default function BlackJack({}: {}) {
+const calcValue = (card: Card | null) => {
+  if (!card) return 0;
+  if (typeof card.num === "number") {
+    return cardValue[card.num] ?? 0;
+  }
+  if (typeof card.rank === "number") {
+    return cardValue[card.rank] ?? 0;
+  }
+  if (typeof card.rank === "string") {
+    if (card.rank in faceLookup) {
+      return faceLookup[card.rank];
+    }
+    const numericRank = Number(card.rank);
+    return Number.isNaN(numericRank) ? 0 : numericRank;
+  }
+  return 0;
+};
+
+export default function BlackJack() {
   const [deck, setDeck] = useState<Card[]>([]);
   const [discardDeck, setDiscardDeck] = useState<Card[]>([]);
   const [playerCards, setPlayerCards] = useState<Card[]>([]);
   const [dealerCards, setDealerCards] = useState<Card[]>([]);
   const [showDealer, setShowDealer] = useState(false);
 
-  const totalValue = (cards: Card[]) => {
-    let newValue = 0;
-    cards.map((c, i) => {
-      newValue += calcValue(c);
-    });
-    return newValue;
-  };
-
-  useEffect(() => {
-    handleStart();
-  }, []);
+  const totalValue = (cards: Card[]) =>
+    cards.reduce((total, card) => total + calcValue(card), 0);
 
   function clearRound() {
-    setDiscardDeck([...playerCards, ...dealerCards, ...discardDeck]);
+    if (playerCards.length === 0 && dealerCards.length === 0) {
+      return;
+    }
+    setDiscardDeck((prev) => [...playerCards, ...dealerCards, ...prev]);
     handleClear();
   }
-  function handleClear() {
+  const handleClear = useCallback(() => {
     setPlayerCards([]);
     setDealerCards([]);
     setShowDealer(false);
-  }
-  async function handleStart() {
+  }, []);
+  const handleStart = useCallback(async () => {
     setDeck([]);
     setDiscardDeck([]);
     handleClear();
-    const data = await startBlackJackGame();
-    setDeck(data.deck);
-  }
+    const data = await bjStart();
+    setDeck(data.deck ?? []);
+  }, [handleClear]);
+
+  useEffect(() => {
+    void handleStart();
+  }, [handleStart]);
 
   async function handleDeal() {
-    // setDiscardDeck([...playerCards, ...dealerCards, ...discardDeck]);
-    // handleClear();
-    const data = await startBlackJackRound(deck);
-    setDeck(data.deck);
-    setPlayerCards(data.playerCards);
-    setDealerCards(data.dealerCards);
+    if (deck.length === 0) return;
+    const payload: BJDeckState = { deck };
+    const data = await bjRound(payload);
+    console.log(data.playerCards, data,'player cards')
+    setDeck(data.deck ?? []);
+    setPlayerCards(data.playerCards ?? []);
+    setDealerCards(data.dealerCards ?? []);
+    setShowDealer(false);
   }
 
   async function playDealer() {
