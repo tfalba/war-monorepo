@@ -1,4 +1,5 @@
 import deckBack from "./../assets/new-card-back.png";
+// import deckBack from "./../assets/black-red-white-riviera.png";
 import type { Card } from "../types";
 
 type CardVariant = "stack" | "display" | "battle";
@@ -8,7 +9,7 @@ const cardLabel = (card: Card) =>
 
 const variantClassMap: Record<CardVariant, string> = {
   stack:
-    "h-28 rounded-xl shadow-card card",
+    "h-28 rounded-xl border border-gold/40 shadow-card card",
   display:
     "h-48 w-32 rounded-2xl border border-gold/40 bg-white shadow-card overflow-hidden p-1",
   battle:
