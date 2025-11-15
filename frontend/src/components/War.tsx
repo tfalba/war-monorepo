@@ -6,7 +6,6 @@ import type { Card } from "../types";
 import deckBack from "./../assets/new-card-back.png";
 // import deckBack from "./../assets/black-red-white-riviera.png";
 
-
 const FACE_LOOKUP: Record<string, number> = {
   J: 11,
   Q: 12,
@@ -73,10 +72,26 @@ export default function War() {
     void handleWar();
   };
 
+  const handleReveal = () => {
+    setBattleRevealed(true);
+  };
+
   const handlePlay =
-    cardA && cardB ? (warRound ? resolveWarWithFade : handleClear) : playRoundWithFade;
-  const actionLabel =
-    cardA && cardB ? (warRound ? "Resolve War" : "Clear Hand") : "Play Round";
+    cardA && cardB
+      ? battleRevealed
+        ? warRound
+          ? resolveWarWithFade
+          : handleClear
+        : handleReveal
+      : playRoundWithFade;
+  const actionDetails: { label: string; class: string } =
+    cardA && cardB
+      ? battleRevealed
+        ? warRound
+          ? { label: "Resolve War", class: "btn-primary" }
+          : { label: "Clear Hand", class: "btn-outline" }
+        : { label: "Reveal Outcome", class: "btn-primary" }
+      : { label: "Play Round", class: "btn-accent" };
   const canPlay = deckA.length > 0 && deckB.length > 0;
   const showBattle = Boolean(cardA && cardB);
 
@@ -90,17 +105,17 @@ export default function War() {
     return () => clearTimeout(timeout);
   }, [battleEntering]);
 
-  // useEffect(() => {
-  //   if (!cardA || !cardB) {
-  //     setBattleEntering(false);
-  //   }
-  // }, [cardA, cardB]);
-
   return (
     <section className="space-y-6">
       <header className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-black/30 p-6 shadow-insetFelt md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="text-lg font-semibold uppercase tracking-[0.35em] text-gold/90">
+          <p className="text-xs uppercase tracking-[0.35em] text-gold/70">
+            Classic Mode
+          </p>
+          <h2 className="text-4xl font-display text-chipBlue text-outline-blue">
+            War
+          </h2>
+          <p className="text-sm text-white/70">
             Round {Math.max(roundNumber, 0) + 1}
           </p>
         </div>
@@ -108,8 +123,12 @@ export default function War() {
           <button className="btn btn-outline" onClick={handleStart}>
             {roundNumber > 0 ? "Restart Game" : "Start Game"}
           </button>
-          <button className="btn btn-primary" onClick={handlePlay} disabled={!canPlay}>
-            {actionLabel}
+          <button
+            className={`btn ${actionDetails.class}`}
+            onClick={handlePlay}
+            disabled={!canPlay}
+          >
+            {actionDetails.label}
           </button>
         </div>
       </header>
@@ -161,16 +180,21 @@ export default function War() {
       {bonus &&
         bonus.length > 0 &&
         (!warRound || (warRound && battleRevealed)) && (
-        <div className="rounded-3xl border border-gold/25 bg-black/30 p-4 shadow-soft">
-          <p className="text-xs uppercase tracking-[0.35em] text-gold">
-            Bonus pile ({bonus.length})
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {bonus.map((c, i) => (
-              <CardView key={i} idx={i} card={c} variant="stack" showCard />
-            ))}
+          <div className="rounded-3xl border border-gold/25 bg-black/30 p-4 shadow-soft">
+            <p className="text-xs uppercase tracking-[0.35em] text-gold">
+              Bonus pile ({bonus.length})
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {bonus.map((c) => (
+                <CardView
+                  key={`${c.suit}-${c.rank}-${c.num}`}
+                  card={c}
+                  variant="stack"
+                  showCard
+                />
+              ))}
+            </div>
           </div>
-        </div>
         )}
     </section>
   );
@@ -206,18 +230,20 @@ function DisplayPlayerDeck({
   const handlePlay =
     cardA && cardB ? (warRound ? handleWar : handleClear) : handleRound;
 
-  const showCardStatus = (card: Card, index: number, variant: "stack" | "display") =>
+  const showCardStatus = (
+    card: Card,
+    index: number,
+    variant: "stack" | "display"
+  ) =>
     Boolean(
-      card &&
-        index < prevBonus.length + 2 &&
-        (winner || variant === "display")
+      card && index < prevBonus.length + 2 && (winner || variant === "display")
     );
 
   return (
     <section className="flex flex-col gap-5 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-soft">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-lg uppercase tracking-[0.35em] text-white/90 font-semibold">
+          <p className=" uppercase tracking-[0.2em] text-paper/90 font-light">
             Player {player}
           </p>
           {winner && (
@@ -228,15 +254,13 @@ function DisplayPlayerDeck({
       </div>
 
       <div
-        // className="flex flex-wrap items-start gap-2 cursor-pointer"
-        className="deck"
+        className="deck-war"
         onClick={handlePlay}
       >
         {[...cards].reverse().map((c, i) => (
           <CardView
             key={i}
             card={c}
-            idx={i}
             variant="stack"
             showCard={showCardStatus(c, i, "stack")}
           />
@@ -289,7 +313,11 @@ function BattleArena({
           WAR
         </div>
       )}
-      <p className={`text-lg uppercase font-semibold tracking-[0.35em] pb-5 ${hasBattle ? "text-gold" : ""}`}>
+      <p
+        className={`text-4xl font-display text-white font-display pb-5 ${
+          hasBattle ? "text-outline-gold" : "text-outline-emerald"
+        }`}
+      >
         {hasBattle ? (warRound ? "WAR!" : "Battlefield") : "Battlefield"}
       </p>
       <div
@@ -316,22 +344,22 @@ function BattleArena({
             />
           </>
         ) : (
-          <p className="text-sm text-white/70">Deal cards to start the next battle.</p>
+          <p className="text-sm text-white/70">
+            Deal cards to start the next battle.
+          </p>
         )}
       </div>
       <div className="flex w-full flex-col gap-3">
         {hasBattle ? (
           <>
-            <button
-              className="btn btn-primary"
-              onClick={onReveal}
-              disabled={battleRevealed}
-            >
-              {battleRevealed ? "Outcome Revealed" : "Reveal Outcome"}
-            </button>
+            {!battleRevealed && (
+              <button className="btn btn-primary" onClick={onReveal}>
+                {"Reveal Outcome"}
+              </button>
+            )}
             {battleRevealed && (
               <button
-                className="btn btn-outline"
+                className={`btn ${warRound ? "btn-primary" : "btn-outline"}`}
                 onClick={warRound ? onResolveWar : onClear}
               >
                 {warRound ? "Resolve War" : "Clear Hand"}
@@ -385,9 +413,7 @@ function WinnerArrow({ direction }: { direction: "left" | "right" }) {
   const arrowClass = direction === "left" ? "scale-x-[-1]" : "";
 
   return (
-    <div
-      className="absolute -top-6 left-1/2 -translate-x-1/2 flex items-center gap-1 rounded-full bg-gold px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-[0.3em] text-emeraldDeep shadow-soft"
-    >
+    <div className="absolute -top-6 left-1/2 -translate-x-1/2 flex items-center gap-1 rounded-full bg-gold px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-[0.3em] text-emeraldDeep shadow-soft">
       <svg
         width="16"
         height="16"

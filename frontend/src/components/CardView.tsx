@@ -11,32 +11,26 @@ const variantClassMap: Record<CardVariant, string> = {
   stack:
     "h-28 rounded-xl border border-gold/40 shadow-card card",
   display:
-    "h-48 w-32 rounded-2xl border border-gold/40 bg-white shadow-card overflow-hidden p-1",
+    "h-48 w-32 rounded-2xl shadow-card overflow-hidden",
   battle:
     "h-36 w-24 rounded-2xl border border-gold/60 bg-white shadow-card overflow-hidden p-1",
 };
 
 export function CardView({
   card,
-  idx = 0,
   variant = "stack",
   showCard = false,
   className = "",
 }: {
   card: Card;
-  idx?: number;
   variant?: CardVariant;
   showCard?: boolean;
   className?: string;
 }) {
   const txt = cardLabel(card);
-  const overlap = variant === "stack" && idx > 0 ? -36 : 0;
 
   return (
-    <div
-      className={`${variantClassMap[variant]} ${className}`}
-      // style={{ marginLeft: overlap }}
-    >
+    <div className={`${variantClassMap[variant]} ${className}`}>
       <img
         className="h-full w-full rounded-[inherit] object-cover"
         src={showCard ? card?.image : deckBack}

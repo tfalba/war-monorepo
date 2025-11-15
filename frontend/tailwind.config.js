@@ -24,7 +24,9 @@ export default {
       fontFamily: {
         sans: ["Montserrat", "ui-sans-serif", "system-ui"],
         display: ["Belleza", "sans-serif"],
+        cursive: ["Ballet", "cursive"],
       },
+
 
       boxShadow: {
         card: "0 8px 20px rgba(0,0,0,0.3)",

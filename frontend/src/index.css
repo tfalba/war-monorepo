@@ -29,6 +29,7 @@
   /* Fonts */
   --font-sans: "Montserrat", ui-sans-serif, system-ui;
   --font-display: "Belleza", sans-serif;
+  --font-cursive: "Ballet", "Belleza", cursive;
 }
 
 /* Base styles */
@@ -72,6 +73,10 @@
     @apply border border-gold/60 text-gold hover:bg-gold/10 focus-visible:outline-gold;
   }
 
+  .btn-outline-paper {
+    @apply border border-paper/80 text-paper/90 hover:bg-paper/10 focus-visible:outline-paper;
+  }
+
   .btn-accent {
     @apply bg-chipBlue text-white hover:bg-chipBlue/90 focus-visible:outline-chipBlue;
   }
@@ -93,11 +98,59 @@
   .card__face img { width: 100%; height: 100%; object-fit: cover; display: block; }
 }
 
+@layer utilities {
+  .text-shadow-blue {
+    text-shadow: 2px 2px 6px rgba(36, 113, 163, 0.8); /* chipBlue tone */
+  }
+
+  .text-shadow-gold {
+    text-shadow: 2px 2px 6px rgba(212, 175, 55, 0.9);
+  }
+
+  .text-shadow-white {
+    text-shadow: 2px 2px 6px rgba(255, 255, 255, 0.5)
+  }
+
+    .text-outline-blue {
+    color: white;
+    -webkit-text-stroke: 2px var(--color-chipBlue);
+  }
+
+  .text-outline-gold {
+    color: white;
+    -webkit-text-stroke: 2px var(--color-gold);
+  }
+
+  .text-outline-emerald {
+    color: var(--color-gold);
+    -webkit-text-stroke: 1px var(--color-paper);
+  }
+}
+
 /* Deck container */
 
+.deck-bj {
+ /* tune these as you like */
+  --card-w: 76px;
+  --card-h: 114px;
+  --overlap: 68px;
+  --track: calc(var(--card-w) - var(--overlap));
 
-.deck {
-  /* tune these as you like */
+  box-sizing: border-box;
+
+  /* add padding to “reserve” the part that visually sticks out */
+  padding-inline-end: var(--overlap);
+
+  display: grid;
+  grid-auto-rows: var(--card-h, 140px);
+  grid-template-columns: repeat(auto-fill, minmax(var(--track), var(--track)));
+  gap: 5px;
+
+  /* optional: clip hover lifts so they don’t make scrollbars */
+  overflow: hidden;}
+
+.deck-war {
+ /* tune these as you like */
   --card-w: 76px;
   --card-h: 114px;
   --overlap: 50px;
@@ -114,8 +167,7 @@
   gap: 5px;
 
   /* optional: clip hover lifts so they don’t make scrollbars */
-  overflow: hidden;
-}
+  overflow: hidden;}
 
 .card {
   width: var(--card-w);

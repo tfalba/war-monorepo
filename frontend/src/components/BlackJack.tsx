@@ -104,7 +104,9 @@ export default function BlackJack() {
           <p className="text-xs uppercase tracking-[0.35em] text-gold/70">
             Casino Mode
           </p>
-          <h2 className="text-4xl font-display text-white">Blackjack</h2>
+          <h2 className="text-4xl font-display text-chipBlue text-outline-blue">
+            Blackjack
+          </h2>
           <p className="text-sm text-white/70">
             Deck size: {deck.length.toString().padStart(2, "0")} cards
           </p>
@@ -138,13 +140,13 @@ export default function BlackJack() {
         <div className="space-y-6">
           <PilePanel title="Draw Pile" subtitle={`${deck.length} left`}>
             {[...deck].reverse().map((c, i) => (
-              <CardView key={i} idx={i} card={c} variant="stack" />
+              <CardView key={i} card={c} variant="stack" />
             ))}
           </PilePanel>
 
           <PilePanel title="Discard" subtitle={`${discardDeck.length} burned`}>
             {[...discardDeck].reverse().map((c, i) => (
-              <CardView key={i} idx={i} card={c} variant="stack" showCard />
+              <CardView key={i} card={c} variant="stack" showCard />
             ))}
           </PilePanel>
         </div>
@@ -185,7 +187,9 @@ function PilePanel({
         </p>
         {subtitle && <span className="text-sm text-white/60">{subtitle}</span>}
       </div>
-      <div className="mt-4 flex flex-wrap gap-1">{children}</div>
+            <div className="deck-bj">{children}</div>
+
+      {/* <div className="mt-4 flex flex-wrap gap-1">{children}</div> */}
     </div>
   );
 }
