@@ -28,7 +28,7 @@ const statusCopy: Record<BlackjackStatus, string> = {
 const MIN_BET = 10;
 const RECENT_FACE_UP = 6;
 const DEALER_FLIP_DELAY = 450;
-const DEALER_DRAW_DELAY = 1200;
+const DEALER_DRAW_DELAY = 900;
 
 const getStoredBank = () => {
   if (typeof window === "undefined") return 1000;
@@ -438,7 +438,7 @@ export default function BlackJack() {
               label="Dealer"
               cards={dealerCards}
               totalLabel={
-                dealerAnimationsDone && dealerRevealed
+                dealerRevealed && dealerHoleFlipped
                   ? dealerValue.toString()
                   : dealerCards.length > 0
                   ? "??"
