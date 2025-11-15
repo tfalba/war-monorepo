@@ -1,6 +1,13 @@
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { bjStart, bjRound, bjHit, bjStand } from "./../api";
 import { CardView } from "./CardView";
+import deckBack from "../assets/new-card-back.png";
 import type {
   BJDeckState,
   BJActionPayload,
@@ -20,6 +27,8 @@ const statusCopy: Record<BlackjackStatus, string> = {
 
 const MIN_BET = 10;
 const RECENT_FACE_UP = 6;
+const DEALER_FLIP_DELAY = 450;
+const DEALER_DRAW_DELAY = 1200;
 
 const getStoredBank = () => {
   if (typeof window === "undefined") return 1000;
@@ -43,6 +52,8 @@ export default function BlackJack() {
   const [recentDiscardCount, setRecentDiscardCount] = useState(0);
   const [playerCards, setPlayerCards] = useState<Card[]>([]);
   const [dealerCards, setDealerCards] = useState<Card[]>([]);
+  const [dealerTargetCards, setDealerTargetCards] = useState<Card[]>([]);
+  const [dealerHoleFlipped, setDealerHoleFlipped] = useState(false);
   const [playerValue, setPlayerValue] = useState(0);
   const [dealerValue, setDealerValue] = useState(0);
   const [status, setStatus] = useState<BlackjackStatus>("player-turn");
@@ -55,6 +66,13 @@ export default function BlackJack() {
   const [playerNatural, setPlayerNatural] = useState(false);
   const [autoStood, setAutoStood] = useState(false);
   const [settled, setSettled] = useState(true);
+  const [lastWinAmount, setLastWinAmount] = useState(0);
+  const dealerFlipTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
+  const dealerDrawTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
 
   useEffect(() => {
     localStorage.setItem("bj_bank", bank.toString());
@@ -73,14 +91,31 @@ export default function BlackJack() {
     [bank]
   );
 
+  const clearDealerAnimationTimers = useCallback(() => {
+    if (dealerFlipTimeoutRef.current) {
+      clearTimeout(dealerFlipTimeoutRef.current);
+      dealerFlipTimeoutRef.current = null;
+    }
+    if (dealerDrawTimeoutRef.current) {
+      clearTimeout(dealerDrawTimeoutRef.current);
+      dealerDrawTimeoutRef.current = null;
+    }
+  }, []);
+
   useEffect(() => {
     setBet((prev) => clampBetValue(prev));
   }, [bank, clampBetValue]);
 
   const applyHandState = (hand: BJHandState) => {
+    const nextDealerCards = hand.dealerCards ?? [];
     setDeck(hand.deck ?? []);
     setPlayerCards(hand.playerCards ?? []);
-    setDealerCards(hand.dealerCards ?? []);
+    setDealerTargetCards(nextDealerCards);
+    setDealerCards((prev) => (hand.revealDealer ? prev : nextDealerCards));
+    if (!hand.revealDealer) {
+      clearDealerAnimationTimers();
+      setDealerHoleFlipped(false);
+    }
     setPlayerValue(hand.playerValue ?? 0);
     setDealerValue(hand.dealerValue ?? 0);
     setStatus(hand.status);
@@ -95,8 +130,11 @@ export default function BlackJack() {
   };
 
   const handleClear = useCallback(() => {
+    clearDealerAnimationTimers();
     setPlayerCards([]);
     setDealerCards([]);
+    setDealerTargetCards([]);
+    setDealerHoleFlipped(false);
     setPlayerValue(0);
     setDealerValue(0);
     setStatus("player-turn");
@@ -104,19 +142,24 @@ export default function BlackJack() {
     setMessage("");
     setPlayerNatural(false);
     setAutoStood(false);
-  }, []);
+    setLastWinAmount(0);
+  }, [clearDealerAnimationTimers]);
 
   const archiveHand = useCallback(() => {
     if (playerCards.length === 0 && dealerCards.length === 0) {
       return;
     }
-    const moved = playerCards.length + dealerCards.length;
+    const dealerPile =
+      dealerTargetCards.length > dealerCards.length
+        ? dealerTargetCards
+        : dealerCards;
+    const moved = playerCards.length + dealerPile.length;
     if (moved > 0) {
-      setDiscardDeck((prev) => [...playerCards, ...dealerCards, ...prev]);
+      setDiscardDeck((prev) => [...playerCards, ...dealerPile, ...prev]);
       setRecentDiscardCount(moved);
     }
     handleClear();
-  }, [dealerCards, handleClear, playerCards]);
+  }, [dealerCards, dealerTargetCards, handleClear, playerCards]);
 
   const handleStart = useCallback(async () => {
     setDeck([]);
@@ -152,6 +195,7 @@ export default function BlackJack() {
     setActiveBet(bet);
     setSettled(false);
     setAutoStood(false);
+    setLastWinAmount(0);
     const payload: BJDeckState = { deck };
     const data = await bjRound(payload);
     applyHandState(data);
@@ -185,6 +229,65 @@ export default function BlackJack() {
   const bust = status === "player-bust";
   const chipsDisabled =
     (playerCards.length > 0 && status === "player-turn") || activeBet > 0;
+  const dealerAnimationsDone =
+    !revealDealer ||
+    (dealerHoleFlipped && dealerCards.length >= dealerTargetCards.length);
+  const showResultUI = status !== "player-turn" && dealerAnimationsDone;
+
+  useEffect(() => {
+    if (!revealDealer) {
+      return;
+    }
+    if (dealerHoleFlipped || dealerCards.length === 0) return;
+    if (dealerFlipTimeoutRef.current) {
+      clearTimeout(dealerFlipTimeoutRef.current);
+    }
+    dealerFlipTimeoutRef.current = window.setTimeout(() => {
+      setDealerHoleFlipped(true);
+      dealerFlipTimeoutRef.current = null;
+    }, DEALER_FLIP_DELAY);
+    return () => {
+      if (dealerFlipTimeoutRef.current) {
+        clearTimeout(dealerFlipTimeoutRef.current);
+        dealerFlipTimeoutRef.current = null;
+      }
+    };
+  }, [dealerCards.length, dealerHoleFlipped, revealDealer]);
+
+  useEffect(() => {
+    if (!revealDealer || !dealerHoleFlipped) return;
+    if (dealerCards.length === 0) return;
+    if (dealerCards.length >= dealerTargetCards.length) return;
+    if (dealerDrawTimeoutRef.current) {
+      clearTimeout(dealerDrawTimeoutRef.current);
+    }
+    dealerDrawTimeoutRef.current = window.setTimeout(() => {
+      setDealerCards((prev) => {
+        const nextCard = dealerTargetCards[prev.length];
+        if (!nextCard) return prev;
+        return [...prev, nextCard];
+      });
+      dealerDrawTimeoutRef.current = null;
+    }, DEALER_DRAW_DELAY);
+    return () => {
+      if (dealerDrawTimeoutRef.current) {
+        clearTimeout(dealerDrawTimeoutRef.current);
+        dealerDrawTimeoutRef.current = null;
+      }
+    };
+  }, [dealerCards.length, dealerTargetCards, dealerHoleFlipped, revealDealer]);
+
+  useEffect(() => {
+    if (!revealDealer) {
+      setDealerHoleFlipped(false);
+    }
+  }, [revealDealer]);
+
+  useEffect(() => {
+    return () => {
+      clearDealerAnimationTimers();
+    };
+  }, [clearDealerAnimationTimers]);
 
   useEffect(() => {
     if (status !== "player-turn" || activeBet === 0 || settled || autoStood) {
@@ -209,8 +312,15 @@ export default function BlackJack() {
   ]);
 
   useEffect(() => {
-    if (status === "player-turn" || activeBet === 0 || settled) return;
+    if (
+      status === "player-turn" ||
+      activeBet === 0 ||
+      settled ||
+      !dealerAnimationsDone
+    )
+      return;
     let payout = 0;
+    let profit = 0;
     if (status === "push") {
       payout = activeBet;
     } else if (status === "player-win" || status === "dealer-bust") {
@@ -218,11 +328,20 @@ export default function BlackJack() {
       if (playerNatural && playerCards.length === 2) {
         payout = Math.floor(activeBet * 2.5);
       }
+      profit = payout - activeBet;
     }
+    setLastWinAmount(profit > 0 ? profit : 0);
     setBank((b) => b + payout);
     setActiveBet(0);
     setSettled(true);
-  }, [status, activeBet, settled, playerNatural, playerCards.length]);
+  }, [
+    status,
+    activeBet,
+    settled,
+    dealerAnimationsDone,
+    playerNatural,
+    playerCards.length,
+  ]);
 
   const reversedDiscard = [...discardDeck].reverse();
   const faceUpCount = Math.min(
@@ -282,33 +401,37 @@ export default function BlackJack() {
       </header>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_2fr] lg:items-start">
-        <div className="flex flex-col gap-2 h-full min-h-[28rem] rounded-3xl border border-white/10 bg-white/5 p-4 shadow-soft order-1 lg:order-2">
-          <Hand
-            label="Dealer"
-            cards={dealerCards}
-            totalLabel={
-              dealerRevealed
-                ? dealerValue.toString()
-                : dealerCards.length > 0
-                ? "??"
-                : ""
-            }
-            showFirst={dealerRevealed}
-          />
-          {status !== "player-turn" ? (
-            <div className="flex items-center justify-center pt-2">
+        <div className="flex flex-col gap-2 min-h-[40rem] h-full rounded-3xl border border-white/10 bg-white/5 p-4 shadow-soft order-1 lg:order-2">
+          <div className="flex flex-1 flex-col space-y-4 items-center">
+            <Hand
+              label="Dealer"
+              cards={dealerCards}
+              totalLabel={
+                dealerAnimationsDone && dealerRevealed
+                  ? dealerValue.toString()
+                  : dealerCards.length > 0
+                  ? "??"
+                  : ""
+              }
+              showFirst={dealerRevealed}
+              useFlipFirstCard
+              flipRevealed={dealerRevealed && dealerHoleFlipped}
+            />
+          </div>
+          {status !== "player-turn" && dealerAnimationsDone ? (
+            <div className="flex items-center justify-end">
               <h2 className="text-4xl font-display text-chipBlue text-outline-gold">
                 {statusCopy[status] || "Round complete"}
               </h2>
             </div>
           ) : (
             <div className="flex items-center justify-center">
-              <h2 className="px-4 py-1 text-xs font-semibold text-transparent">
-                Round in progress
+              <h2 className="text-4xl font-display text-transparent">
+                In progress
               </h2>
             </div>
           )}
-          <div className="flex flex-1 flex-col space-y-4">
+          <div className="flex flex-1 flex-col space-y-4 items-center">
             <Hand
               label="Player"
               cards={playerCards}
@@ -333,7 +456,14 @@ export default function BlackJack() {
               >
                 Hit
               </button>
-              {status !== "player-turn" && (
+            </div>
+            {showResultUI ? (
+              <div className="flex w-full items-center gap-4">
+                {lastWinAmount > 0 ? (
+                  <WinDisplay amount={lastWinAmount} />
+                ) : (
+                  <span className="text-sm text-transparent">No win</span>
+                )}
                 <button
                   className="btn btn-accent ml-auto"
                   onClick={handleDeal}
@@ -341,12 +471,12 @@ export default function BlackJack() {
                 >
                   Play Next Round
                 </button>
-              )}
-            </div>
-            {message ? (
-              <p className="text-sm text-gold/80">{message}</p>
+              </div>
             ) : (
-              <p className="text-sm text-transparent">No message</p>
+              <div className="flex w-full">
+                <span className="text-sm text-transparent">Waiting</span>
+                <button className="btn" />
+              </div>
             )}
           </div>
         </div>
@@ -379,17 +509,17 @@ export default function BlackJack() {
               />
             ))}
           </PilePanel>
-           <div className="order-2 lg:order-4 lg:col-span-1 hidden lg:grid">
-          <ChipControls
-            bank={bank}
-            bet={bet}
-            activeBet={activeBet}
-            disabled={chipsDisabled}
-            onAdjust={handleChipAdjust}
-            onClearBet={handleClearBetAmount}
-          />
+          <div className="order-2 lg:order-4 lg:col-span-1 hidden lg:grid">
+            <ChipControls
+              bank={bank}
+              bet={bet}
+              activeBet={activeBet}
+              disabled={chipsDisabled}
+              onAdjust={handleChipAdjust}
+              onClearBet={handleClearBetAmount}
+            />
+          </div>
         </div>
-        </div>        
       </div>
     </section>
   );
@@ -405,7 +535,7 @@ function PilePanel({
   children: ReactNode;
 }) {
   return (
-    <div className="min-h-[200px] rounded-3xl border border-white/10 bg-black/30 p-4 shadow-soft">
+    <div className="min-h-[140px] rounded-3xl border border-white/10 bg-black/30 p-4 shadow-soft">
       <div className="flex items-center justify-between">
         <p className="text-xs uppercase tracking-[0.35em] text-white/70">
           {title}
@@ -423,17 +553,21 @@ function Hand({
   totalLabel,
   showFirst,
   highlight,
+  useFlipFirstCard,
+  flipRevealed,
 }: {
   label: string;
   cards: Card[];
   totalLabel?: string;
   showFirst?: boolean;
   highlight?: string;
+  useFlipFirstCard?: boolean;
+  flipRevealed?: boolean;
 }) {
   const badge = highlight || (totalLabel ? `${totalLabel}` : undefined);
   return (
-    <div className="flex-1">
-      <div className="mb-3 flex gap-4 items-center">
+    <div className="flex-1 place-items">
+      <div className="mb-3 flex gap-4 items-center justify-center">
         <p className="text-sm uppercase tracking-[0.35em] text-white/70">
           {label}
         </p>
@@ -444,15 +578,63 @@ function Hand({
         )}
       </div>
       <div className="flex flex-wrap gap-3">
-        {cards.map((card, idx) => (
-          <CardView
-            key={`${label}-${idx}`}
-            card={card}
-            variant="display"
-            showCard={idx === 0 ? showFirst : true}
-          />
+        {cards.map((card, idx) => {
+          if (useFlipFirstCard && idx === 0) {
+            return (
+              <FlipDisplayCard
+                key={`${label}-${idx}`}
+                card={card}
+                flipped={Boolean(flipRevealed)}
+              />
+            );
+          }
+          return (
+            <CardView
+              key={`${label}-${idx}`}
+              card={card}
+              variant="display"
+              showCard={idx === 0 ? showFirst : true}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function FlipDisplayCard({ card, flipped }: { card: Card; flipped: boolean }) {
+  const label = card?.rank ?? card?.num ?? "";
+  return (
+    <div className="relative h-48 w-32" style={{ perspective: "1200px" }}>
+      <div className={`card-flip ${flipped ? "is-flipped" : ""}`}>
+        <div className="card__face card__face--front">
+          <img src={deckBack} alt="Card back" />
+        </div>
+        <div className="card__face card__face--back">
+          <img src={card.image} alt={`Card ${label}`} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WinDisplay({ amount }: { amount: number }) {
+  const coinsToShow = Math.min(5, Math.max(1, Math.ceil(amount / 20)));
+  return (
+    <div className="flex items-center gap-3 rounded-2xl border border-gold/40 bg-black/30 px-4 py-2 text-sm text-gold">
+      <div className="flex items-center gap-1">
+        {Array.from({ length: coinsToShow }).map((_, idx) => (
+          <span
+            key={`coin-${idx}`}
+            className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-gold text-emeraldDeep text-xs font-semibold shadow-card"
+          >
+            $
+          </span>
         ))}
       </div>
+      <span className="font-semibold tracking-wide">
+        ${amount.toFixed(0)} won
+      </span>
     </div>
   );
 }
