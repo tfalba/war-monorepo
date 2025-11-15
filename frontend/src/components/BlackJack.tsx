@@ -21,6 +21,22 @@ const statusCopy: Record<BlackjackStatus, string> = {
 const MIN_BET = 10;
 const RECENT_FACE_UP = 6;
 
+const getStoredBank = () => {
+  if (typeof window === "undefined") return 1000;
+  const storedBank = Number(window.localStorage.getItem("bj_bank"));
+  return Number.isFinite(storedBank) && storedBank > 0 ? storedBank : 1000;
+};
+
+const getStoredBet = () => {
+  if (typeof window === "undefined") return MIN_BET;
+  const bank = getStoredBank();
+  const storedBet = Number(window.localStorage.getItem("bj_bet"));
+  if (Number.isFinite(storedBet) && storedBet >= MIN_BET) {
+    return Math.min(storedBet, bank);
+  }
+  return Math.min(MIN_BET, bank);
+};
+
 export default function BlackJack() {
   const [deck, setDeck] = useState<Card[]>([]);
   const [discardDeck, setDiscardDeck] = useState<Card[]>([]);
@@ -33,25 +49,12 @@ export default function BlackJack() {
   const [revealDealer, setRevealDealer] = useState(false);
   const [message, setMessage] = useState("");
 
-  const [bank, setBank] = useState(1000);
-  const [bet, setBet] = useState(MIN_BET);
+  const [bank, setBank] = useState(() => getStoredBank());
+  const [bet, setBet] = useState(() => getStoredBet());
   const [activeBet, setActiveBet] = useState(0);
   const [playerNatural, setPlayerNatural] = useState(false);
   const [autoStood, setAutoStood] = useState(false);
   const [settled, setSettled] = useState(true);
-
-  useEffect(() => {
-    const storedBank = Number(localStorage.getItem("bj_bank"));
-    const initialBank =
-      Number.isFinite(storedBank) && storedBank > 0 ? storedBank : 1000;
-    setBank(initialBank);
-    const storedBet = Number(localStorage.getItem("bj_bet"));
-    if (Number.isFinite(storedBet) && storedBet >= MIN_BET) {
-      setBet(Math.min(storedBet, initialBank));
-    } else {
-      setBet(Math.min(MIN_BET, initialBank));
-    }
-  }, []);
 
   useEffect(() => {
     localStorage.setItem("bj_bank", bank.toString());
@@ -278,35 +281,8 @@ export default function BlackJack() {
         </div>
       </header>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_2fr]">
-        <div className="space-y-6">
-          <PilePanel title="Draw Pile" subtitle={`${deck.length} left`}>
-            {[...deck].reverse().map((c, i) => (
-              <CardView key={`draw-${i}`} card={c} variant="stack" />
-            ))}
-          </PilePanel>
-
-          <PilePanel title="Discard" subtitle={`${discardDeck.length} burned`}>
-            {reversedDiscard.map((c, i) => (
-              <CardView
-                key={`discard-${i}`}
-                card={c}
-                variant="stack"
-                showCard={i < faceUpCount}
-              />
-            ))}
-          </PilePanel>
-          <ChipControls
-            bank={bank}
-            bet={bet}
-            activeBet={activeBet}
-            disabled={chipsDisabled}
-            onAdjust={handleChipAdjust}
-            onClearBet={handleClearBetAmount}
-          />
-        </div>
-
-        <div className="flex flex-col gap-2 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-soft">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_2fr] lg:items-start">
+        <div className="flex flex-col gap-2 h-full min-h-[28rem] rounded-3xl border border-white/10 bg-white/5 p-4 shadow-soft order-1 lg:order-2">
           <Hand
             label="Dealer"
             cards={dealerCards}
@@ -321,17 +297,15 @@ export default function BlackJack() {
           />
           {status !== "player-turn" ? (
             <div className="flex items-center justify-center pt-2">
-              {/* <span className="rounded-full border border-gold/50 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-gold"> */}
               <h2 className="text-4xl font-display text-chipBlue text-outline-gold">
                 {statusCopy[status] || "Round complete"}
               </h2>
-              {/* </span> */}
             </div>
           ) : (
             <div className="flex items-center justify-center">
-              <span className="px-4 py-1 text-xs font-semibold text-transparent">
+              <h2 className="px-4 py-1 text-xs font-semibold text-transparent">
                 Round in progress
-              </span>
+              </h2>
             </div>
           )}
           <div className="flex flex-1 flex-col space-y-4">
@@ -376,16 +350,47 @@ export default function BlackJack() {
             )}
           </div>
         </div>
-      </div>
 
-      {/* <ChipControls
-        bank={bank}
-        bet={bet}
-        activeBet={activeBet}
-        disabled={chipsDisabled}
-        onAdjust={handleChipAdjust}
-        onClearBet={handleClearBetAmount}
-      /> */}
+        <div className="lg:hidden order-3 lg:order-2">
+          <ChipControls
+            bank={bank}
+            bet={bet}
+            activeBet={activeBet}
+            disabled={chipsDisabled}
+            onAdjust={handleChipAdjust}
+            onClearBet={handleClearBetAmount}
+          />
+        </div>
+
+        <div className="space-y-6 order-4 lg:order-1">
+          <PilePanel title="Draw Pile" subtitle={`${deck.length} left`}>
+            {[...deck].reverse().map((c, i) => (
+              <CardView key={`draw-${i}`} card={c} variant="stack" />
+            ))}
+          </PilePanel>
+
+          <PilePanel title="Discard" subtitle={`${discardDeck.length} burned`}>
+            {reversedDiscard.map((c, i) => (
+              <CardView
+                key={`discard-${i}`}
+                card={c}
+                variant="stack"
+                showCard={i < faceUpCount}
+              />
+            ))}
+          </PilePanel>
+           <div className="order-2 lg:order-4 lg:col-span-1 hidden lg:grid">
+          <ChipControls
+            bank={bank}
+            bet={bet}
+            activeBet={activeBet}
+            disabled={chipsDisabled}
+            onAdjust={handleChipAdjust}
+            onClearBet={handleClearBetAmount}
+          />
+        </div>
+        </div>        
+      </div>
     </section>
   );
 }
