@@ -55,9 +55,27 @@ export type WarStartResponse = {
 
 export type BJDeckState = { deck: Card[]; log?: string };
 
-export type BJRoundResult = {
+export type BlackjackStatus =
+  | "player-turn"
+  | "player-bust"
+  | "player-win"
+  | "dealer-win"
+  | "dealer-bust"
+  | "push";
+
+export type BJHandState = {
   deck: Card[];
   playerCards: Card[];
   dealerCards: Card[];
+  playerValue: number;
+  dealerValue: number;
+  status: BlackjackStatus;
+  revealDealer: boolean;
   log?: string;
+};
+
+export type BJActionPayload = {
+  deck: Card[];
+  playerCards: Card[];
+  dealerCards: Card[];
 };

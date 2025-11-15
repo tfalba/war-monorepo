@@ -9,6 +9,8 @@ from war import (
     war_round,
     double_deck_shuffled,
     start_bj,
+    bj_hit,
+    bj_stand,
 )
 
 app = FastAPI(title="War API")
@@ -64,11 +66,35 @@ class WarRoundResult(BaseModel):
 class BJDeckState(BaseModel):
     deck: List[Card]
 
-class BJRoundResult(BaseModel):
+BlackjackStatus = Literal[
+    "player-turn",
+    "player-bust",
+    "player-win",
+    "dealer-win",
+    "dealer-bust",
+    "push",
+]
+
+
+class BJHandState(BaseModel):
     deck: List[Card]
     playerCards: List[Card]
     dealerCards: List[Card]
-    log: str
+    playerValue: int
+    dealerValue: int
+    status: BlackjackStatus
+    revealDealer: bool = False
+    log: str = ""
+
+
+class BJActionPayload(BaseModel):
+    deck: List[Card]
+    playerCards: List[Card]
+    dealerCards: List[Card]
+
+
+class BJActionRequest(BJActionPayload):
+    action: Literal["hit", "stand"]
 
 # ---------- Routes ----------
 @app.get("/game/start", response_model=DeckState)
@@ -90,8 +116,17 @@ def game_war(state: DeckState):
 def game_blackjack_start():
     return {"deck": double_deck_shuffled()}
 
-@app.post("/game/black-jack-round", response_model=BJRoundResult)
+@app.post("/game/black-jack-round", response_model=BJHandState)
 def game_blackjack_round(state: BJDeckState):
-    # BJDeckState.deck is a list[Card] models → dump to dicts
     deck = _dump_cards(state.deck)
     return start_bj(deck)
+
+
+@app.post("/game/black-jack-action", response_model=BJHandState)
+def game_blackjack_action(payload: BJActionRequest):
+    deck = _dump_cards(payload.deck)
+    player_cards = _dump_cards(payload.playerCards)
+    dealer_cards = _dump_cards(payload.dealerCards)
+    if payload.action == "hit":
+        return bj_hit(deck, player_cards, dealer_cards)
+    return bj_stand(deck, player_cards, dealer_cards)

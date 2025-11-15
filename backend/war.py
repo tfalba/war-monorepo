@@ -27,12 +27,9 @@ def double_deck_shuffled() -> List[Dict]:
 
 def start_bj(deck: List[Dict]):
     qDeck = deque(deck)
-    p1 = qDeck.popleft()
-    d1 = qDeck.popleft()
-    p2 = qDeck.popleft()
-    d2 = qDeck.popleft()
-    # Return keys the API/FE can use directly:
-    return {"playerCards": [p1, p2], "dealerCards": [d1, d2], "deck": list(qDeck), "log": "Blackjack deal"}
+    p_cards = [qDeck.popleft(), qDeck.popleft()]
+    d_cards = [qDeck.popleft(), qDeck.popleft()]
+    return build_bj_state(list(qDeck), p_cards, d_cards, "player-turn", reveal=False, log="Blackjack deal")
 
 def split_shuffled_decks() -> Tuple[List[Dict], List[Dict]]:
     deck = build_deck()
@@ -88,3 +85,86 @@ def war_round(deckA: List[Dict], deckB: List[Dict], bonus: List[Dict]):
 
     new_bonus = [*bonus, a1, a2, a3, b1, b2, b3]
     return {"deckA": list(qa), "deckB": list(qb), "result": "tie_again", "log": f"{log} | tie again", "bonus": new_bonus}
+
+
+# ---------------- Blackjack helpers ---------------- #
+def bj_card_value(card: Dict) -> int:
+    num = card["num"]
+    if num >= 11 and num <= 13:
+        return 10
+    if num == 14:
+        return 11
+    return num
+
+
+def bj_hand_value(cards: List[Dict]) -> int:
+    total = 0
+    aces = 0
+    for card in cards:
+        value = bj_card_value(card)
+        total += value
+        if card["num"] == 14:
+            aces += 1
+    while total > 21 and aces > 0:
+        total -= 10
+        aces -= 1
+    return total
+
+
+def build_bj_state(
+    deck: List[Dict],
+    player_cards: List[Dict],
+    dealer_cards: List[Dict],
+    status: str,
+    reveal: bool,
+    log: str = "",
+) -> Dict:
+    return {
+        "deck": deck,
+        "playerCards": player_cards,
+        "dealerCards": dealer_cards,
+        "playerValue": bj_hand_value(player_cards),
+        "dealerValue": bj_hand_value(dealer_cards),
+        "status": status,
+        "revealDealer": reveal,
+        "log": log,
+    }
+
+
+def bj_hit(deck: List[Dict], player_cards: List[Dict], dealer_cards: List[Dict]) -> Dict:
+    qDeck = deque(deck)
+    player = list(player_cards)
+    dealer = list(dealer_cards)
+    if qDeck:
+        drawn = qDeck.popleft()
+        player.append(drawn)
+        log = f"Player hits: {display_card(drawn)}"
+    else:
+        log = "No more cards in shoe."
+    value = bj_hand_value(player)
+    if value > 21:
+        return build_bj_state(list(qDeck), player, dealer, "player-bust", True, "Player busts!")
+    return build_bj_state(list(qDeck), player, dealer, "player-turn", False, log)
+
+
+def bj_stand(deck: List[Dict], player_cards: List[Dict], dealer_cards: List[Dict]) -> Dict:
+    qDeck = deque(deck)
+    player = list(player_cards)
+    dealer = list(dealer_cards)
+    while bj_hand_value(dealer) < 17 and qDeck:
+        dealer.append(qDeck.popleft())
+    player_total = bj_hand_value(player)
+    dealer_total = bj_hand_value(dealer)
+    if dealer_total > 21:
+        status = "dealer-bust"
+        log = "Dealer busts!"
+    elif dealer_total < player_total:
+        status = "player-win"
+        log = "Player wins!"
+    elif dealer_total > player_total:
+        status = "dealer-win"
+        log = "Dealer wins!"
+    else:
+        status = "push"
+        log = "Push."
+    return build_bj_state(list(qDeck), player, dealer, status, True, log)

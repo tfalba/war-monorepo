@@ -1,47 +1,21 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { bjStart, bjRound } from "./../api";
+import { bjStart, bjRound, bjHit, bjStand } from "./../api";
 import { CardView } from "./CardView";
-import type { BJDeckState, Card } from "../types";
+import type {
+  BJDeckState,
+  BJActionPayload,
+  BJHandState,
+  BlackjackStatus,
+  Card,
+} from "../types";
 
-const cardValue: Record<number, number> = {
-  2: 2,
-  3: 3,
-  4: 4,
-  5: 5,
-  6: 6,
-  7: 7,
-  8: 8,
-  9: 9,
-  10: 10,
-  11: 10,
-  12: 10,
-  13: 10,
-  14: 11,
-};
-
-const faceLookup: Record<string, number> = {
-  J: 10,
-  Q: 10,
-  K: 10,
-  A: 11,
-};
-
-const calcValue = (card: Card | null) => {
-  if (!card) return 0;
-  if (typeof card.num === "number") {
-    return cardValue[card.num] ?? 0;
-  }
-  if (typeof card.rank === "number") {
-    return cardValue[card.rank] ?? 0;
-  }
-  if (typeof card.rank === "string") {
-    if (card.rank in faceLookup) {
-      return faceLookup[card.rank];
-    }
-    const numericRank = Number(card.rank);
-    return Number.isNaN(numericRank) ? 0 : numericRank;
-  }
-  return 0;
+const statusCopy: Record<BlackjackStatus, string> = {
+  "player-turn": "",
+  "player-bust": "Player busts!",
+  "player-win": "Player wins!",
+  "dealer-win": "Dealer wins.",
+  "dealer-bust": "Dealer busts!",
+  push: "Push.",
 };
 
 export default function BlackJack() {
@@ -49,21 +23,31 @@ export default function BlackJack() {
   const [discardDeck, setDiscardDeck] = useState<Card[]>([]);
   const [playerCards, setPlayerCards] = useState<Card[]>([]);
   const [dealerCards, setDealerCards] = useState<Card[]>([]);
-  const [showDealer, setShowDealer] = useState(false);
+  const [playerValue, setPlayerValue] = useState(0);
+  const [dealerValue, setDealerValue] = useState(0);
+  const [status, setStatus] = useState<BlackjackStatus>("player-turn");
+  const [revealDealer, setRevealDealer] = useState(false);
+  const [message, setMessage] = useState("");
 
-  const totalValue = (cards: Card[]) =>
-    cards.reduce((total, card) => total + calcValue(card), 0);
-
-  function clearRound() {
-    if (playerCards.length === 0 && dealerCards.length === 0) return;
-    setDiscardDeck((prev) => [...playerCards, ...dealerCards, ...prev]);
-    handleClear();
-  }
+  const applyHandState = (hand: BJHandState) => {
+    setDeck(hand.deck ?? []);
+    setPlayerCards(hand.playerCards ?? []);
+    setDealerCards(hand.dealerCards ?? []);
+    setPlayerValue(hand.playerValue ?? 0);
+    setDealerValue(hand.dealerValue ?? 0);
+    setStatus(hand.status);
+    setRevealDealer(hand.revealDealer ?? false);
+    setMessage(hand.log ?? statusCopy[hand.status] ?? "");
+  };
 
   const handleClear = useCallback(() => {
     setPlayerCards([]);
     setDealerCards([]);
-    setShowDealer(false);
+    setPlayerValue(0);
+    setDealerValue(0);
+    setStatus("player-turn");
+    setRevealDealer(false);
+    setMessage("");
   }, []);
 
   const handleStart = useCallback(async () => {
@@ -78,24 +62,43 @@ export default function BlackJack() {
     void handleStart();
   }, [handleStart]);
 
+  const roundPayload = (): BJActionPayload => ({
+    deck,
+    playerCards,
+    dealerCards,
+  });
+
   async function handleDeal() {
     if (deck.length === 0) return;
     const payload: BJDeckState = { deck };
     const data = await bjRound(payload);
-    setDeck(data.deck ?? []);
-    setPlayerCards(data.playerCards ?? []);
-    setDealerCards(data.dealerCards ?? []);
-    setShowDealer(false);
+    applyHandState(data);
   }
 
-  function playDealer() {
-    setShowDealer(true);
+  async function handleHit() {
+    if (status !== "player-turn") return;
+    const data = await bjHit(roundPayload());
+    applyHandState(data);
   }
 
-  const canReveal =
-    playerCards.length > 0 && dealerCards.length > 0 && !showDealer;
+  async function handleStand() {
+    if (status !== "player-turn") return;
+    const data = await bjStand(roundPayload());
+    applyHandState(data);
+  }
+
+  function clearRound() {
+    if (playerCards.length === 0 && dealerCards.length === 0) return;
+    setDiscardDeck((prev) => [...playerCards, ...dealerCards, ...prev]);
+    handleClear();
+  }
+
   const canClear =
-    showDealer && (playerCards.length > 0 || dealerCards.length > 0);
+    playerCards.length > 0 && dealerCards.length > 0 && status !== "player-turn";
+  const canDeal = deck.length >= 4;
+  const canAct = status === "player-turn" && playerCards.length > 0;
+  const dealerRevealed = revealDealer || status !== "player-turn";
+  const bust = status === "player-bust";
 
   return (
     <section className="space-y-6">
@@ -115,16 +118,9 @@ export default function BlackJack() {
           <button
             className="btn btn-primary"
             onClick={handleDeal}
-            disabled={deck.length === 0}
+            disabled={!canDeal}
           >
             {playerCards.length === 0 ? "Deal Cards" : "Deal Next Round"}
-          </button>
-          <button
-            className="btn btn-accent"
-            onClick={playDealer}
-            disabled={!canReveal}
-          >
-            Reveal Dealer
           </button>
           <button
             className="btn btn-outline"
@@ -140,13 +136,13 @@ export default function BlackJack() {
         <div className="space-y-6">
           <PilePanel title="Draw Pile" subtitle={`${deck.length} left`}>
             {[...deck].reverse().map((c, i) => (
-              <CardView key={i} card={c} variant="stack" />
+              <CardView key={`draw-${i}`} card={c} variant="stack" />
             ))}
           </PilePanel>
 
           <PilePanel title="Discard" subtitle={`${discardDeck.length} burned`}>
             {[...discardDeck].reverse().map((c, i) => (
-              <CardView key={i} card={c} variant="stack" showCard />
+              <CardView key={`discard-${i}`} card={c} variant="stack" showCard />
             ))}
           </PilePanel>
         </div>
@@ -155,15 +151,36 @@ export default function BlackJack() {
           <Hand
             label="Dealer"
             cards={dealerCards}
-            total={totalValue(dealerCards)}
-            showFirst={showDealer}
+            totalLabel={dealerRevealed ? dealerValue.toString() : "??"}
+            showFirst={dealerRevealed}
           />
-          <Hand
-            label="Player"
-            cards={playerCards}
-            total={totalValue(playerCards)}
-            showFirst
-          />
+          <div className="space-y-4">
+            <Hand
+              label="Player"
+              cards={playerCards}
+              totalLabel={playerCards.length > 0 ? playerValue.toString() : undefined}
+              showFirst
+              highlight={bust ? "Bust" : undefined}
+            />
+            <div className="flex flex-wrap items-center gap-3">
+              <button className="btn btn-primary" onClick={handleHit} disabled={!canAct}>
+                Hit
+              </button>
+              <button className="btn btn-outline" onClick={handleStand} disabled={!canAct}>
+                Stand
+              </button>
+              {status !== "player-turn" && (
+                <span className="rounded-full border border-gold/50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-gold">
+                  {statusCopy[status] || "Round complete"}
+                </span>
+              )}
+            </div>
+            {message && (
+              <p className="text-sm text-gold/80">
+                {message}
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </section>
@@ -187,7 +204,7 @@ function PilePanel({
         </p>
         {subtitle && <span className="text-sm text-white/60">{subtitle}</span>}
       </div>
-            <div className="deck-bj">{children}</div>
+      <div className="deck-bj">{children}</div>
     </div>
   );
 }
@@ -195,21 +212,28 @@ function PilePanel({
 function Hand({
   label,
   cards,
-  total,
+  totalLabel,
   showFirst,
+  highlight,
 }: {
   label: string;
   cards: Card[];
-  total: number;
+  totalLabel?: string;
   showFirst?: boolean;
+  highlight?: string;
 }) {
+  const badge = highlight || (totalLabel ? `${totalLabel}` : undefined);
   return (
     <div className="flex-1">
       <div className="mb-3 flex items-center justify-between">
         <p className="text-sm uppercase tracking-[0.35em] text-white/70">
           {label}
         </p>
-        {cards.length > 0 && <span className="card-total">{total}</span>}
+        {badge && (
+          <span className="card-total px-4 py-2 text-base">
+            {highlight ? highlight : totalLabel}
+          </span>
+        )}
       </div>
       <div className="flex flex-wrap gap-3">
         {cards.map((card, idx) => (
