@@ -143,6 +143,7 @@ export default function BlackJack() {
     setPlayerNatural(false);
     setAutoStood(false);
     setLastWinAmount(0);
+    setActiveBet(0);
   }, [clearDealerAnimationTimers]);
 
   const archiveHand = useCallback(() => {
@@ -213,6 +214,31 @@ export default function BlackJack() {
     applyHandState(data);
   }, [roundPayload, status]);
 
+  const handleDoubleDown = useCallback(async () => {
+    const eligible =
+      status === "player-turn" &&
+      playerCards.length === 2 &&
+      (playerValue === 10 || playerValue === 11) &&
+      activeBet > 0;
+    if (!eligible) return;
+    if (bank < activeBet) {
+      setMessage("Not enough bankroll to double down.");
+      return;
+    }
+    setBank((b) => b - activeBet);
+    setActiveBet((prev) => prev * 2);
+    const hitResult = await bjHit(roundPayload());
+    applyHandState(hitResult);
+    if (hitResult.status === "player-turn") {
+      const standResult = await bjStand({
+        deck: hitResult.deck ?? [],
+        playerCards: hitResult.playerCards ?? [],
+        dealerCards: hitResult.dealerCards ?? [],
+      });
+      applyHandState(standResult);
+    }
+  }, [activeBet, bank, playerCards.length, playerValue, roundPayload, status]);
+
   function clearRound() {
     archiveHand();
     setSettled(true);
@@ -225,6 +251,11 @@ export default function BlackJack() {
   const canDeal =
     deck.length >= 4 && activeBet === 0 && bet <= bank && bank >= MIN_BET;
   const canAct = status === "player-turn" && playerCards.length > 0;
+  const canDoubleDown =
+    canAct &&
+    playerCards.length === 2 &&
+    (playerValue === 10 || playerValue === 11) &&
+    activeBet > 0;
   const dealerRevealed = revealDealer || status !== "player-turn";
   const bust = status === "player-bust";
   const chipsDisabled =
@@ -378,7 +409,7 @@ export default function BlackJack() {
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
-          {!canDeal && canClear && (
+          {!canDeal && deck.length <= 4 && (
             <button className="btn btn-accent" onClick={handleStart}>
               New Deal
             </button>
@@ -441,41 +472,58 @@ export default function BlackJack() {
               showFirst
               highlight={bust ? "Bust" : undefined}
             />
-            <div className="flex flex-wrap items-center gap-3">
-              <button
-                className="btn btn-outline"
-                onClick={handleStand}
-                disabled={!canAct}
-              >
-                Stand
-              </button>
-              <button
-                className="btn btn-primary"
-                onClick={handleHit}
-                disabled={!canAct}
-              >
-                Hit
-              </button>
-            </div>
-            {showResultUI ? (
-              <div className="flex w-full items-center gap-4">
-                {lastWinAmount > 0 ? (
-                  <WinDisplay amount={lastWinAmount} />
-                ) : (
-                  <span className="text-sm text-transparent">No win</span>
-                )}
+            <div className="flex flex-wrap items-center gap-3 w-full justify-center">
+              {canDeal && activeBet === 0 && !showResultUI ? (
                 <button
                   className="btn btn-accent ml-auto"
                   onClick={handleDeal}
                   disabled={!canDeal}
                 >
-                  Play Next Round
+                  Play New Hand
+                </button>
+              ) : (
+                <>
+                  <button
+                    className="btn btn-outline"
+                    onClick={handleStand}
+                    disabled={!canAct}
+                  >
+                    Stand
+                  </button>
+                  <button
+                    className="btn btn-primary"
+                    onClick={handleHit}
+                    disabled={!canAct}
+                  >
+                    Hit
+                  </button>
+                  {canDoubleDown && (
+                    <button
+                      className="btn btn-accent"
+                      onClick={handleDoubleDown}
+                      disabled={!canAct}
+                    >
+                      Double Down
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+            {showResultUI ? (
+              <div className="flex w-full items-center gap-4 justify-between">
+                {lastWinAmount > 0 ? (
+                  <WinDisplay amount={lastWinAmount} />
+                ) : (
+                  <span className="text-sm text-transparent">No win</span>
+                )}
+                <button className="btn btn-accent ml-auto" onClick={handleDeal}>
+                  Play Next Hand
                 </button>
               </div>
             ) : (
               <div className="flex w-full">
                 <span className="text-sm text-transparent">Waiting</span>
-                <button className="btn" />
+                <button className="btn text-transparent hidden">Dummy</button>
               </div>
             )}
           </div>
@@ -655,7 +703,7 @@ function ChipControls({
   onClearBet: () => void;
 }) {
   const chips = [
-    { amount: 1, color: "bg-white text-ink" },
+    { amount: 1, color: "bg-white text-ink chip-btn-white" },
     { amount: 5, color: "bg-chipRed text-white" },
     { amount: 20, color: "bg-chipBlue text-white" },
   ];
@@ -686,7 +734,7 @@ function ChipControls({
         {chips.map((chip) => (
           <button
             key={chip.amount}
-            className={`flex h-16 w-16 items-center justify-center rounded-full text-sm font-semibold shadow-card ${chip.color}`}
+            className={`chip-btn ${chip.color}`}
             onClick={() => onAdjust(chip.amount)}
             disabled={disabled}
           >
