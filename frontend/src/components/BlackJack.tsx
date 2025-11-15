@@ -136,7 +136,7 @@ export default function BlackJack() {
         </div>
       </header>
 
-      <div className="grid gap-8 lg:grid-cols-[1fr,2fr]">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_2fr]">
         <div className="space-y-6">
           <PilePanel title="Draw Pile" subtitle={`${deck.length} left`}>
             {[...deck].reverse().map((c, i) => (
@@ -180,7 +180,7 @@ function PilePanel({
   children: ReactNode;
 }) {
   return (
-    <div className="rounded-3xl border border-white/10 bg-black/30 p-4 shadow-soft">
+    <div className="min-h-[200px] rounded-3xl border border-white/10 bg-black/30 p-4 shadow-soft">
       <div className="flex items-center justify-between">
         <p className="text-xs uppercase tracking-[0.35em] text-white/70">
           {title}
@@ -188,8 +188,6 @@ function PilePanel({
         {subtitle && <span className="text-sm text-white/60">{subtitle}</span>}
       </div>
             <div className="deck-bj">{children}</div>
-
-      {/* <div className="mt-4 flex flex-wrap gap-1">{children}</div> */}
     </div>
   );
 }
@@ -206,7 +204,7 @@ function Hand({
   showFirst?: boolean;
 }) {
   return (
-    <div>
+    <div className="flex-1">
       <div className="mb-3 flex items-center justify-between">
         <p className="text-sm uppercase tracking-[0.35em] text-white/70">
           {label}

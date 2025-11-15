@@ -131,9 +131,9 @@
 
 .deck-bj {
  /* tune these as you like */
-  --card-w: 76px;
-  --card-h: 114px;
-  --overlap: 68px;
+  --card-w: 50px;
+  --card-h: 75px;
+  --overlap: 35px;
   --track: calc(var(--card-w) - var(--overlap));
 
   box-sizing: border-box;
