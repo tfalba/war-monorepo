@@ -133,7 +133,7 @@
  /* tune these as you like */
   --card-w: 50px;
   --card-h: 75px;
-  --overlap: 35px;
+  --overlap: 38px;
   --track: calc(var(--card-w) - var(--overlap));
 
   box-sizing: border-box;
@@ -144,7 +144,7 @@
   display: grid;
   grid-auto-rows: var(--card-h, 140px);
   grid-template-columns: repeat(auto-fill, minmax(var(--track), var(--track)));
-  gap: 5px;
+  gap: 1px;
 
   /* optional: clip hover lifts so they don’t make scrollbars */
   overflow: hidden;}
