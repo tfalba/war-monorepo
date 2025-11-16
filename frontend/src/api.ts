@@ -22,26 +22,26 @@ const api = axios.create({
 // const api = axios.create({ baseURL: "/api" });
 
 export const startWar = () =>
-  api.get<WarStartResponse>("/game/start").then(r => r.data);
+  api.get<WarStartResponse>("/api/game/start").then(r => r.data);
 
 export const playWarRound = (state: DeckState) =>
-  api.post<WarRoundResult>("/game/round", state).then(r => r.data);
+  api.post<WarRoundResult>("/api/game/round", state).then(r => r.data);
 
 export const resolveWar = (state: DeckState) =>
-  api.post<WarRoundResult>("/game/war", state).then(r => r.data);
+  api.post<WarRoundResult>("/api/game/war", state).then(r => r.data);
 
 export const bjStart = () =>
-  api.get<BJDeckState>("/game/black-jack-start").then(r => r.data);
+  api.get<BJDeckState>("/api/game/black-jack-start").then(r => r.data);
 
 export const bjRound = (state: BJDeckState) =>
-  api.post<BJHandState>("/game/black-jack-round", state).then(r => r.data);
+  api.post<BJHandState>("/api/game/black-jack-round", state).then(r => r.data);
 
 export const bjHit = (payload: BJActionPayload) =>
   api
-    .post<BJHandState>("/game/black-jack-action", { ...payload, action: "hit" })
+    .post<BJHandState>("/api/game/black-jack-action", { ...payload, action: "hit" })
     .then(r => r.data);
 
 export const bjStand = (payload: BJActionPayload) =>
   api
-    .post<BJHandState>("/game/black-jack-action", { ...payload, action: "stand" })
+    .post<BJHandState>("/api/game/black-jack-action", { ...payload, action: "stand" })
     .then(r => r.data);
