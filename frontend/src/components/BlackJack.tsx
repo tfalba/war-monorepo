@@ -29,6 +29,8 @@ const MIN_BET = 10;
 const RECENT_FACE_UP = 6;
 const DEALER_FLIP_DELAY = 450;
 const DEALER_DRAW_DELAY = 900;
+const DECK_STORAGE_KEY = "bj_deck";
+const DISCARD_STORAGE_KEY = "bj_discard";
 
 const getStoredBank = () => {
   if (typeof window === "undefined") return 1000;
@@ -46,9 +48,33 @@ const getStoredBet = () => {
   return Math.min(MIN_BET, bank);
 };
 
+const getStoredDeck = (): Card[] => {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(DECK_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const getStoredDiscard = (): Card[] => {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(DISCARD_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
 export default function BlackJack() {
-  const [deck, setDeck] = useState<Card[]>([]);
-  const [discardDeck, setDiscardDeck] = useState<Card[]>([]);
+  const [deck, setDeck] = useState<Card[]>(() => getStoredDeck());
+  const [discardDeck, setDiscardDeck] = useState<Card[]>(() => getStoredDiscard());
   const [recentDiscardCount, setRecentDiscardCount] = useState(0);
   const [playerCards, setPlayerCards] = useState<Card[]>([]);
   const [dealerCards, setDealerCards] = useState<Card[]>([]);
@@ -67,6 +93,7 @@ export default function BlackJack() {
   const [autoStood, setAutoStood] = useState(false);
   const [settled, setSettled] = useState(true);
   const [lastWinAmount, setLastWinAmount] = useState(0);
+  const [showTopUpPrompt, setShowTopUpPrompt] = useState(false);
   const dealerFlipTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null
   );
@@ -82,9 +109,26 @@ export default function BlackJack() {
     localStorage.setItem("bj_bet", bet.toString());
   }, [bet]);
 
+  useEffect(() => {
+    try {
+      localStorage.setItem(DECK_STORAGE_KEY, JSON.stringify(deck));
+    } catch {
+      // ignore storage errors
+    }
+  }, [deck]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(DISCARD_STORAGE_KEY, JSON.stringify(discardDeck));
+    } catch {
+      // ignore storage errors
+    }
+  }, [discardDeck]);
+
   const clampBetValue = useCallback(
     (value: number) => {
       if (bank <= 0) return 0;
+      return value;
       const minAllowed = Math.min(MIN_BET, bank);
       return Math.min(Math.max(value, minAllowed), bank);
     },
@@ -172,8 +216,10 @@ export default function BlackJack() {
   }, [handleClear]);
 
   useEffect(() => {
-    void handleStart();
-  }, [handleStart]);
+    if (deck.length === 0) {
+      void handleStart();
+    }
+  }, [deck.length, handleStart]);
 
   const roundPayload = useCallback(
     (): BJActionPayload => ({
@@ -184,23 +230,44 @@ export default function BlackJack() {
     [deck, dealerCards, playerCards]
   );
 
-  async function handleDeal() {
-    if (activeBet > 0) return;
-    if (status === "player-turn" && playerCards.length > 0) return;
-    if (bet < MIN_BET || bet > bank) {
-      setMessage("Bet must be at least $10 and within your bankroll.");
-      return;
-    }
-    archiveHand();
-    setBank((b) => b - bet);
-    setActiveBet(bet);
-    setSettled(false);
-    setAutoStood(false);
-    setLastWinAmount(0);
-    const payload: BJDeckState = { deck };
-    const data = await bjRound(payload);
-    applyHandState(data);
-  }
+  const handleDeal = useCallback(
+    async (bankOverride?: number) => {
+      const availableBank = bankOverride ?? bank;
+      if (activeBet > 0) return;
+      if (status === "player-turn" && playerCards.length > 0) return;
+      if (bet < MIN_BET) {
+        setMessage("Bet must be at least $10 and within your bankroll.");
+        return;
+      }
+      if (bet > availableBank) {
+        setShowTopUpPrompt(true);
+        return;
+      }
+      if (deck.length < 10) {
+        handleStart();
+        return;
+      }
+      archiveHand();
+      setBank((b) => b - bet);
+      setActiveBet(bet);
+      setSettled(false);
+      setAutoStood(false);
+      setLastWinAmount(0);
+      const payload: BJDeckState = { deck };
+      const data = await bjRound(payload);
+      applyHandState(data);
+    },
+    [
+      activeBet,
+      archiveHand,
+      bank,
+      bet,
+      deck,
+      handleStart,
+      playerCards.length,
+      status,
+    ]
+  );
 
   const handleHit = useCallback(async () => {
     if (status !== "player-turn") return;
@@ -222,7 +289,7 @@ export default function BlackJack() {
       activeBet > 0;
     if (!eligible) return;
     if (bank < activeBet) {
-      setMessage("Not enough bankroll to double down.");
+      setShowTopUpPrompt(true);
       return;
     }
     setBank((b) => b - activeBet);
@@ -239,6 +306,17 @@ export default function BlackJack() {
     }
   }, [activeBet, bank, playerCards.length, playerValue, roundPayload, status]);
 
+  const handleTopUpAccept = useCallback(() => {
+    const nextBank = bank + 1000;
+    setBank(nextBank);
+    setShowTopUpPrompt(false);
+    void handleDeal(nextBank);
+  }, [bank, handleDeal]);
+
+  const handleTopUpCancel = useCallback(() => {
+    setShowTopUpPrompt(false);
+  }, []);
+
   function clearRound() {
     archiveHand();
     setSettled(true);
@@ -249,7 +327,7 @@ export default function BlackJack() {
     dealerCards.length > 0 &&
     status !== "player-turn";
   const canDeal =
-    deck.length >= 4 && activeBet === 0 && bet <= bank && bank >= MIN_BET;
+    deck.length >= 10 && activeBet === 0 && bet <= bank && bank >= MIN_BET;
   const canAct = status === "player-turn" && playerCards.length > 0;
   const canDoubleDown =
     canAct &&
@@ -396,6 +474,26 @@ export default function BlackJack() {
 
   return (
     <section className="space-y-6">
+      {showTopUpPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+          <div className="w-full max-w-md rounded-2xl border border-gold/40 bg-black/80 p-6 shadow-card">
+            <h3 className="text-xl font-semibold text-gold mb-2">
+              Add funds to continue?
+            </h3>
+            <p className="text-sm text-white/80">
+              Your bet exceeds your bankroll. Add $1000 to your account to keep playing?
+            </p>
+            <div className="mt-4 flex justify-end gap-3">
+              <button className="btn btn-outline" onClick={handleTopUpCancel}>
+                Cancel
+              </button>
+              <button className="btn btn-primary" onClick={handleTopUpAccept}>
+                Yes, add $1000
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <header className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-black/30 p-6 shadow-insetFelt md:flex-row md:items-center md:justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.35em] text-gold/70">
@@ -409,17 +507,17 @@ export default function BlackJack() {
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
-          {!canDeal && deck.length <= 4 && (
+          {canDeal && deck.length < 104 && (
             <button className="btn btn-accent" onClick={handleStart}>
-              New Deal
+              New Deck
             </button>
           )}
           <button
             className="btn btn-primary"
-            onClick={handleDeal}
+            onClick={() => handleDeal()}
             disabled={!canDeal}
           >
-            {playerCards.length === 0 ? "Deal Cards" : "Deal Next Round"}
+            {playerCards.length === 0 ? "Deal Cards" : "Deal Next Hand"}
           </button>
           <button
             className="btn btn-outline"
@@ -438,7 +536,7 @@ export default function BlackJack() {
               label="Dealer"
               cards={dealerCards}
               totalLabel={
-                dealerRevealed && dealerHoleFlipped
+                dealerRevealed && dealerAnimationsDone
                   ? dealerValue.toString()
                   : dealerCards.length > 0
                   ? "??"
@@ -472,11 +570,11 @@ export default function BlackJack() {
               showFirst
               highlight={bust ? "Bust" : undefined}
             />
-            <div className="flex flex-wrap items-center gap-3 w-full justify-center">
+            <div className="flex flex-wrap items-center gap-3 w-full justify-end">
               {canDeal && activeBet === 0 && !showResultUI ? (
                 <button
                   className="btn btn-accent ml-auto"
-                  onClick={handleDeal}
+                  onClick={() => handleDeal()}
                   disabled={!canDeal}
                 >
                   Play New Hand
@@ -516,14 +614,14 @@ export default function BlackJack() {
                 ) : (
                   <span className="text-sm text-transparent">No win</span>
                 )}
-                <button className="btn btn-accent ml-auto" onClick={handleDeal}>
+                <button className="btn btn-accent ml-auto" onClick={() => handleDeal()}>
                   Play Next Hand
                 </button>
               </div>
             ) : (
               <div className="flex w-full">
                 <span className="text-sm text-transparent">Waiting</span>
-                <button className="btn text-transparent hidden">Dummy</button>
+                <button className="btn text-transparent">Dummy</button>
               </div>
             )}
           </div>
@@ -540,7 +638,7 @@ export default function BlackJack() {
           />
         </div>
 
-        <div className="space-y-6 order-4 lg:order-1">
+        <div className="space-y-6 flex flex-col h-full justify-between order-4 lg:order-1">
           <PilePanel title="Draw Pile" subtitle={`${deck.length} left`}>
             {[...deck].reverse().map((c, i) => (
               <CardView key={`draw-${i}`} card={c} variant="stack" />
@@ -703,9 +801,9 @@ function ChipControls({
   onClearBet: () => void;
 }) {
   const chips = [
-    { amount: 1, color: "bg-white text-ink chip-btn-white" },
-    { amount: 5, color: "bg-chipRed text-white" },
-    { amount: 20, color: "bg-chipBlue text-white" },
+    { amount: 5, color: "bg-white text-ink chip-btn-white" },
+    { amount: 20, color: "bg-chipRed text-white" },
+    { amount: 100, color: "bg-chipBlue text-white" },
   ];
 
   return (
@@ -721,7 +819,7 @@ function ChipControls({
           <p className="text-xs uppercase tracking-[0.35em] text-white/60">
             Current Bet
           </p>
-          <p className="text-2xl font-semibold">${bet.toFixed(0)}</p>
+          <p className="text-2xl font-semibold">${activeBet > 0 ? activeBet.toFixed(0) : bet.toFixed(0)}</p>
         </div>
         <div>
           <p className="text-xs uppercase tracking-[0.35em] text-white/60">
