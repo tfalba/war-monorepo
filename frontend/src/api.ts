@@ -9,7 +9,17 @@ import type {
 } from "./types";
 export type { Card } from "./types";
 
-const api = axios.create({ baseURL: "/api" });
+// In dev we hit the vite proxy via relative /api.
+// In prod we use VITE_API_URL (Render URL).
+const isDev = import.meta.env.DEV
+const API_BASE = isDev ? "" : import.meta.env.VITE_API_URL
+const api = axios.create({
+  baseURL: API_BASE,          // "" in dev → /api/... hits proxy
+  withCredentials: false,     // not using cookies here
+  headers: { "Content-Type": "application/json" },
+})
+
+// const api = axios.create({ baseURL: "/api" });
 
 export const startWar = () =>
   api.get<WarStartResponse>("/game/start").then(r => r.data);

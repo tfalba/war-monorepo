@@ -1,4 +1,5 @@
 # backend/app.py
+import os;
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, conint
@@ -13,12 +14,17 @@ from war import (
     bj_stand,
 )
 
-app = FastAPI(title="War API")
+# ---------- CORS ----------
+DEFAULT_FRONTEND = os.getenv("FRONTEND_URL", "http://127.0.0.1:5173")
+ALLOWED = [o.strip() for o in os.getenv("CORS_ALLOWED_ORIGINS", DEFAULT_FRONTEND).split(",") if o.strip()]
+
+
+app = FastAPI(title="War & Blackjack API")
 
 # CORS for Vite dev server
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=ALLOWED,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -97,32 +103,36 @@ class BJActionRequest(BJActionPayload):
     action: Literal["hit", "stand"]
 
 # ---------- Routes ----------
-@app.get("/game/start", response_model=DeckState)
+@app.get("/healthz")
+def healthz():
+    return {"ok": True}
+
+@app.get("/api/game/start", response_model=DeckState)
 def game_start():
     deckA, deckB = split_shuffled_decks()
     return {"deckA": deckA, "deckB": deckB, "bonus": []}
 
-@app.post("/game/round", response_model=WarRoundResult)
+@app.post("/api/game/round", response_model=WarRoundResult)
 def game_round(state: DeckState):
     s = _dump_state(state)
     return play_round(s["deckA"], s["deckB"], s["bonus"])
 
-@app.post("/game/war", response_model=WarRoundResult)
+@app.post("/api/game/war", response_model=WarRoundResult)
 def game_war(state: DeckState):
     s = _dump_state(state)
     return war_round(s["deckA"], s["deckB"], s["bonus"])
 
-@app.get("/game/black-jack-start", response_model=BJDeckState)
+@app.get("/api/game/black-jack-start", response_model=BJDeckState)
 def game_blackjack_start():
     return {"deck": double_deck_shuffled()}
 
-@app.post("/game/black-jack-round", response_model=BJHandState)
+@app.post("/api/game/black-jack-round", response_model=BJHandState)
 def game_blackjack_round(state: BJDeckState):
     deck = _dump_cards(state.deck)
     return start_bj(deck)
 
 
-@app.post("/game/black-jack-action", response_model=BJHandState)
+@app.post("/api/game/black-jack-action", response_model=BJHandState)
 def game_blackjack_action(payload: BJActionRequest):
     deck = _dump_cards(payload.deck)
     player_cards = _dump_cards(payload.playerCards)
