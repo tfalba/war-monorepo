@@ -10,7 +10,7 @@ const variantClassMap: Record<CardVariant, string> = {
   stack:
     "h-20 rounded-xl border border-gold/40 shadow-card card",
   display:
-    "h-48 w-32 rounded-2xl shadow-card overflow-hidden not-first:-ml-20 not-first:z-10",
+    "h-60 w-40 rounded-2xl shadow-card overflow-hidden not-first:-ml-33 md:not-first:-ml-26 not-first:z-10",
   battle:
     "h-36 w-24 rounded-2xl border border-gold/60 bg-white shadow-card overflow-hidden p-1",
 };

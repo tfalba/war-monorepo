@@ -751,7 +751,7 @@ function Hand({
 function FlipDisplayCard({ card, flipped }: { card: Card; flipped: boolean }) {
   const label = card?.rank ?? card?.num ?? "";
   return (
-    <div className="relative h-48 w-32" style={{ perspective: "1200px" }}>
+    <div className="relative h-59 w-40" style={{ perspective: "1200px" }}>
       <div className={`card-flip ${flipped ? "is-flipped" : ""}`}>
         <div className="card__face card__face--front">
           <img src={deckBack} alt="Card back" />
