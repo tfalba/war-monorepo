@@ -25,7 +25,8 @@ app = FastAPI(title="War & Blackjack API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED,
-    allow_credentials=True,
+    allow_origin_regex=r"^https://.*\.vercel\.app$",  # previews, e.g. https://casino-games-sooty-xyz.vercel.app
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
