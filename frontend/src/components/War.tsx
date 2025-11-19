@@ -54,12 +54,16 @@ export default function War() {
     warRound,
     prevWinningPlayer,
     roundNumber,
+    storageReady,
+    hasStoredGame,
   } = useGameHelpers();
 
   useEffect(() => {
+    if (!storageReady) return;
+    if (hasStoredGame) return;
     handleStart();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [storageReady, hasStoredGame]);
 
   const playRoundWithFade = () => {
     if (!canPlay) return;
@@ -318,7 +322,11 @@ function BattleArena({
           hasBattle ? "text-outline-gold" : "text-outline-emerald"
         }`}
       >
-        {hasBattle ? (warRound ? "WAR!" : "Battlefield") : "Battlefield"}
+        {hasBattle
+          ? warRound && battleRevealed
+            ? "WAR!"
+            : "Battlefield"
+          : "Battlefield"}
       </p>
       <div
         className={`flex min-h-[150px] w-full items-center justify-center gap-3 transition-opacity duration-500 ${

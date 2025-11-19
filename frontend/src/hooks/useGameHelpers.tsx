@@ -1,10 +1,29 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { playWarRound, resolveWar, startWar } from "../api";
 import type { DeckState, WarRoundResult } from "../types";
 
 type PlayerDeck = DeckState["deckA"];
 type BonusPile = NonNullable<DeckState["bonus"]>;
 type PlayedCard = WarRoundResult["deckA"][number];
+
+const WAR_STATE_STORAGE_KEY = "war_game_state";
+
+type StoredWarState = {
+  deckA: PlayerDeck;
+  deckB: PlayerDeck;
+  prevDeckA: PlayerDeck;
+  prevDeckB: PlayerDeck;
+  cardA: PlayedCard | null;
+  cardB: PlayedCard | null;
+  bonus: BonusPile;
+  prevBonus: BonusPile;
+  warRound: boolean;
+  winningPlayer: string | null;
+  prevWinningPlayer: string | null;
+  log: string;
+  roundNumber: number;
+  hasActiveGame: boolean;
+};
 
 export function useGameHelpers() {
   const [deckA, setDeckA] = useState<PlayerDeck>([]);
@@ -22,8 +41,99 @@ export function useGameHelpers() {
     null
   );
   const [roundNumber, setRoundNumber] = useState(0);
-
   const [log, setLog] = useState<string>("");
+
+  const [storageReady, setStorageReady] = useState(false);
+  const [hasStoredGame, setHasStoredGame] = useState(false);
+  const [hasActiveGame, setHasActiveGame] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      setStorageReady(true);
+      return;
+    }
+
+    try {
+      const raw = window.localStorage.getItem(WAR_STATE_STORAGE_KEY);
+      if (!raw) {
+        setStorageReady(true);
+        return;
+      }
+      const parsed = JSON.parse(raw) as Partial<StoredWarState> | null;
+      if (!parsed?.hasActiveGame) {
+        window.localStorage.removeItem(WAR_STATE_STORAGE_KEY);
+        setStorageReady(true);
+        return;
+      }
+      setPrevDeckA(Array.isArray(parsed.prevDeckA) ? parsed.prevDeckA : []);
+      setPrevDeckB(Array.isArray(parsed.prevDeckB) ? parsed.prevDeckB : []);
+      setDeckA(Array.isArray(parsed.deckA) ? parsed.deckA : []);
+      setDeckB(Array.isArray(parsed.deckB) ? parsed.deckB : []);
+      setCardA(parsed.cardA ?? null);
+      setCardB(parsed.cardB ?? null);
+      setBonus(Array.isArray(parsed.bonus) ? parsed.bonus : []);
+      setPrevBonus(Array.isArray(parsed.prevBonus) ? parsed.prevBonus : []);
+      setWarRound(Boolean(parsed.warRound));
+      setWinningPlayer(parsed.winningPlayer ?? null);
+      setPrevWinningPlayer(parsed.prevWinningPlayer ?? null);
+      setLog(parsed.log ?? "");
+      setRoundNumber(typeof parsed.roundNumber === "number" ? parsed.roundNumber : 0);
+      setHasStoredGame(true);
+      setHasActiveGame(true);
+    } catch {
+      window.localStorage.removeItem(WAR_STATE_STORAGE_KEY);
+    } finally {
+      setStorageReady(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!storageReady || !hasActiveGame) return;
+    if (typeof window === "undefined") return;
+
+    const payload: StoredWarState = {
+      deckA,
+      deckB,
+      prevDeckA,
+      prevDeckB,
+      cardA,
+      cardB,
+      bonus,
+      prevBonus,
+      warRound,
+      winningPlayer,
+      prevWinningPlayer,
+      log,
+      roundNumber,
+      hasActiveGame,
+    };
+
+    try {
+      window.localStorage.setItem(
+        WAR_STATE_STORAGE_KEY,
+        JSON.stringify(payload)
+      );
+    } catch {
+      // Ignore storage errors
+    }
+  }, [
+    storageReady,
+    hasActiveGame,
+    deckA,
+    deckB,
+    prevDeckA,
+    prevDeckB,
+    cardA,
+    cardB,
+    bonus,
+    prevBonus,
+    warRound,
+    winningPlayer,
+    prevWinningPlayer,
+    log,
+    roundNumber,
+  ]);
+
   async function handleStart() {
     const data = await startWar();
     setPrevDeckA(data.deckA);
@@ -37,6 +147,7 @@ export function useGameHelpers() {
     setWarRound(false);
     setPrevWinningPlayer(null);
     setLog(data.log);
+    setHasActiveGame(true);
   }
 
   function handleClear() {
@@ -121,6 +232,8 @@ export function useGameHelpers() {
     prevWinningPlayer,
     log,
     roundNumber,
+    storageReady,
+    hasStoredGame,
     setLog,
     setBonus,
     setWarRound,

@@ -529,7 +529,7 @@ export default function BlackJack() {
         </div>
       </header>
 
-      <div className=" grid grid-cols-1 gap-8 lg:grid-cols-[1fr_2fr] lg:items-start bg-emeraldDeep/100">
+      <div className=" grid grid-cols-1 gap-8 lg:grid-cols-[1fr_2fr] lg:items-start">
         <div className="sticky top-0 flex flex-col gap-2 min-h-[40rem] h-full rounded-3xl border border-white/10 bg-white/5 p-4 shadow-soft order-1 lg:order-2">
           <div className="flex flex-1 flex-col space-y-4 items-center">
             <Hand
@@ -627,7 +627,7 @@ export default function BlackJack() {
           </div>
         </div>
 
-        <div className="lg:hidden order-3 lg:order-2">
+        <div className="z-20 lg:hidden order-3 lg:order-2">
           <ChipControls
             bank={bank}
             bet={bet}
