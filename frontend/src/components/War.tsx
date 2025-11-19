@@ -240,7 +240,7 @@ function DisplayPlayerDeck({
     );
 
   return (
-    <section className="flex flex-col gap-5 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-soft">
+    <section className="z-20 flex flex-col gap-5 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-soft">
       <div className="flex items-center justify-between">
         <div>
           <p className=" uppercase tracking-[0.2em] text-paper/90 font-light">
@@ -297,7 +297,7 @@ function BattleArena({
 }) {
   const hasBattle = Boolean(showBattle && cardA && cardB);
   const baseContainer =
-    "flex flex-col items-center gap-5 rounded-3xl border p-6 text-center shadow-soft relative overflow-hidden transition-colors duration-500";
+    "sticky top-0 flex flex-col items-center gap-5 rounded-3xl border p-6 text-center shadow-soft relative overflow-hidden transition-colors duration-500";
   const containerClass = hasBattle
     ? `${baseContainer} border-gold/40 ${
         battleEntering ? "bg-black/20" : "bg-black/40"

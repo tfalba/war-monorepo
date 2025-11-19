@@ -529,8 +529,8 @@ export default function BlackJack() {
         </div>
       </header>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_2fr] lg:items-start">
-        <div className="flex flex-col gap-2 min-h-[40rem] h-full rounded-3xl border border-white/10 bg-white/5 p-4 shadow-soft order-1 lg:order-2">
+      <div className=" grid grid-cols-1 gap-8 lg:grid-cols-[1fr_2fr] lg:items-start bg-emeraldDeep/100">
+        <div className="sticky top-0 flex flex-col gap-2 min-h-[40rem] h-full rounded-3xl border border-white/10 bg-white/5 p-4 shadow-soft order-1 lg:order-2">
           <div className="flex flex-1 flex-col space-y-4 items-center">
             <Hand
               label="Dealer"
@@ -638,7 +638,7 @@ export default function BlackJack() {
           />
         </div>
 
-        <div className="space-y-6 flex flex-col h-full justify-between order-4 lg:order-1">
+        <div className="bg-emeeraldDeep/100 z-20 space-y-6 flex flex-col h-full justify-between order-4 lg:order-1">
           <PilePanel title="Draw Pile" subtitle={`${deck.length} left`}>
             {[...deck].reverse().map((c, i) => (
               <CardView key={`draw-${i}`} card={c} variant="stack" />
@@ -681,7 +681,7 @@ function PilePanel({
   children: ReactNode;
 }) {
   return (
-    <div className="min-h-[140px] rounded-3xl border border-white/10 bg-black/30 p-4 shadow-soft">
+    <div className="min-h-[140px] rounded-3xl border border-white/10 bg-black/80 p-4 shadow-soft">
       <div className="flex items-center justify-between">
         <p className="text-xs uppercase tracking-[0.35em] text-white/70">
           {title}
@@ -807,7 +807,7 @@ function ChipControls({
   ];
 
   return (
-    <div className="mx-auto max-w-2xl rounded-3xl border border-gold/30 bg-black/40 px-6 py-4 text-white shadow-soft">
+    <div className="mx-auto max-w-2xl rounded-3xl border border-gold/30 bg-black/80 px-6 py-4 text-white shadow-soft">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="text-xs uppercase tracking-[0.35em] text-white/60">
