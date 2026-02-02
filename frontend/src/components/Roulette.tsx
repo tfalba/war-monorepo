@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type Color = "red" | "black" | "green";
 
@@ -37,6 +37,9 @@ export default function Roulette() {
   const [winningNumber, setWinningNumber] = useState<number | null>(null);
   const [wheelRotation, setWheelRotation] = useState(0);
   const [lastWinAmount, setLastWinAmount] = useState(0);
+  const dragStateRef = useRef<{ num: number; amount: number; handled: boolean } | null>(
+    null
+  );
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -73,6 +76,45 @@ export default function Roulette() {
         [num]: (prev[num] ?? 0) + chipValue,
       }));
     });
+  };
+
+  const removeNumberBet = (num: number, amount: number) => {
+    if (amount <= 0) return;
+    setNumberBets((prev) => {
+      const current = prev[num] ?? 0;
+      const nextAmount = Math.max(0, current - amount);
+      if (nextAmount === 0) {
+        const next = { ...prev };
+        delete next[num];
+        return next;
+      }
+      return { ...prev, [num]: nextAmount };
+    });
+  };
+
+  const handleDragStart = (num: number, amount: number) => {
+    dragStateRef.current = { num, amount, handled: false };
+  };
+
+  const handleDropOnNumber = (targetNum: number) => {
+    const dragState = dragStateRef.current;
+    if (!dragState) return;
+    dragState.handled = true;
+    if (dragState.num === targetNum) return;
+    setNumberBets((prev) => ({
+      ...prev,
+      [targetNum]: (prev[targetNum] ?? 0) + dragState.amount,
+    }));
+    removeNumberBet(dragState.num, dragState.amount);
+  };
+
+  const handleDragEnd = () => {
+    const dragState = dragStateRef.current;
+    if (!dragState) return;
+    if (!dragState.handled) {
+      removeNumberBet(dragState.num, dragState.amount);
+    }
+    dragStateRef.current = null;
   };
 
   const handleColorBet = (color: Color) => {
@@ -283,11 +325,16 @@ export default function Roulette() {
                   className={`roulette-number ${color} ${isWinner ? "winner" : ""}`}
                   onClick={() => handleNumberBet(num)}
                   disabled={spinning}
+                  onDragOver={(event) => event.preventDefault()}
+                  onDrop={() => handleDropOnNumber(num)}
                 >
                   <span>{num}</span>
                   <span
                     className="roulette-stack"
                     aria-label={`$${betAmount} bet`}
+                    draggable={betAmount > 0 && !spinning}
+                    onDragStart={() => handleDragStart(num, betAmount)}
+                    onDragEnd={handleDragEnd}
                   >
                     {betAmount > 0 ? (
                       Array.from({ length: 1 }).map((_, idx) => (
