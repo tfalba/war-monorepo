@@ -15,7 +15,7 @@ const FACE_LOOKUP: Record<string, number> = {
 
 const BANK_STORAGE_KEY = "bj_bank";
 const WAR_BET_STORAGE_KEY = "war_bet";
-const MIN_BET = 1;
+const MIN_BET = 5;
 const WIN_RATIO_EXPONENT = 0.45;
 
 function getCardValue(card: Card | null): number {

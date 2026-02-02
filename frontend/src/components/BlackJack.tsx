@@ -867,10 +867,13 @@ export default function BlackJack() {
             />
           </div>
           {showResultUI ? (
-            <div className="flex items-center justify-end fixed left-[85%]">
+            <div className="flex flex-col items-center justify-end fixed left-[80%]">
               <h2 className="text-4xl font-display text-chipBlue text-outline-gold">
                 {resultHeading}
               </h2>
+              {resultHeading.slice(0,5) !== message.slice(0,5) && (
+                <h4 className="ml-4 text-sm text-white/70">{message}</h4>
+              )}
             </div>
           ) : (
             <div className="flex items-center justify-center">
@@ -1070,7 +1073,6 @@ function Hand({
   useFlipFirstCard?: boolean;
   flipRevealed?: boolean;
 }) {
-  const badge = highlight || (totalLabel ? `${totalLabel}` : undefined);
   return (
     <div className="flex-1 place-items">
       <div className="mb-3 flex gap-4 items-center justify-center">
