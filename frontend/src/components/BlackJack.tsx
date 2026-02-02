@@ -792,7 +792,7 @@ export default function BlackJack() {
   }, [chipsDisabled, clampBetValue]);
 
   return (
-    <section className="space-y-6">
+    <section className="space-y-6 lg:flex lg:h-[815px] lg:max-h-[815px] lg:flex-col lg:overflow-hidden lg:space-y-4">
       {showTopUpPrompt && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
           <div className="w-full max-w-md rounded-2xl border border-gold/40 bg-black/80 p-6 shadow-card">
@@ -813,7 +813,7 @@ export default function BlackJack() {
           </div>
         </div>
       )}
-      <header className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-black/30 p-6 shadow-insetFelt md:flex-row md:items-center md:justify-between">
+      <header className="flex flex-col gap-2 rounded-3xl border border-white/10 bg-black/30 p-6 shadow-insetFelt md:flex-row md:items-center md:justify-between">
         <div>
           <p className="text-xs uppercase tracking-[0.35em] text-gold/70">
             Casino Mode
@@ -848,9 +848,9 @@ export default function BlackJack() {
         </div>
       </header>
 
-      <div className=" grid grid-cols-1 gap-8 lg:grid-cols-[1fr_2fr] lg:items-start">
-        <div className="sticky top-0 flex flex-col gap-2 min-h-[40rem] h-full rounded-3xl border border-white/10 bg-white/5 p-4 shadow-soft order-1 lg:order-2">
-          <div className="flex flex-1 flex-col space-y-4 items-center">
+      <div className="grid grid-cols-1 gap-8 lg:flex-1 lg:min-h-0 lg:grid-cols-[1fr_2fr] lg:items-start">
+        <div className="sticky top-0 flex flex-col gap-2 min-h-[40rem] h-full rounded-3xl border border-white/10 bg-white/5 p-4 shadow-soft order-1 lg:order-2 lg:max-h-full lg:overflow-y-auto">
+          <div className="flex flex-[.8] flex-col space-y-4 items-start ml-4">
             <Hand
               label="Dealer"
               cards={dealerCards}
@@ -867,7 +867,7 @@ export default function BlackJack() {
             />
           </div>
           {showResultUI ? (
-            <div className="flex items-center justify-end">
+            <div className="flex items-center justify-end fixed left-[85%]">
               <h2 className="text-4xl font-display text-chipBlue text-outline-gold">
                 {resultHeading}
               </h2>
@@ -879,7 +879,7 @@ export default function BlackJack() {
               </h2>
             </div>
           )}
-          <div className="flex flex-1 flex-col space-y-4 items-center">
+          <div className="flex flex-1 flex-col space-y-4 items-start ml-4">
             {!isSplit && (
               <Hand
                 label="Player"
@@ -917,7 +917,8 @@ export default function BlackJack() {
                 ))}
               </div>
             )}
-            <div className="flex flex-wrap items-center gap-3 w-full justify-end">
+            <div>
+            <div className="flex flex-wrap items-center gap-3 w-full justify-end absolute bottom-10 right-[50%] ">
               {canDeal && activeBet === 0 && !showResultUI ? (
                 <button
                   className="btn btn-accent ml-auto"
@@ -963,8 +964,9 @@ export default function BlackJack() {
                 </>
               )}
             </div>
+            </div>
             {showResultUI ? (
-              <div className="flex w-full items-center gap-4 justify-between">
+              <div className="flex w-full items-center gap-4 justify-between absolute bottom-10 right-2">
                 {lastWinAmount > 0 ? (
                   <WinDisplay amount={lastWinAmount} />
                 ) : (
@@ -994,14 +996,14 @@ export default function BlackJack() {
           />
         </div>
 
-        <div className="bg-emeeraldDeep/100 z-20 space-y-6 flex flex-col h-full justify-between order-4 lg:order-1">
+        <div className="bg-emeeraldDeep/100 z-20 space-y-6 flex flex-col h-full justify-evenly order-4 lg:order-1 lg:max-h-full lg:overflow-y-auto">
           <PilePanel title="Draw Pile" subtitle={`${deck.length} left`}>
             {[...deck].reverse().map((c, i) => (
               <CardView key={`draw-${i}`} card={c} variant="stack" />
             ))}
           </PilePanel>
 
-          <PilePanel title="Discard" subtitle={`${discardDeck.length} burned`}>
+          <PilePanel className="hidden" title="Discard" subtitle={`${discardDeck.length} burned`}>
             {reversedDiscard.map((c, i) => (
               <CardView
                 key={`discard-${i}`}
@@ -1031,13 +1033,15 @@ function PilePanel({
   title,
   subtitle,
   children,
+  className,
 }: {
   title: string;
   subtitle?: string;
   children: ReactNode;
+  className?: string;
 }) {
   return (
-    <div className="min-h-[140px] rounded-3xl border border-white/10 bg-black/80 p-4 shadow-soft">
+    <div className={`${className} min-h-[140px] rounded-3xl border border-white/10 bg-black/80 p-4 shadow-soft`}>
       <div className="flex items-center justify-between">
         <p className="text-xs uppercase tracking-[0.35em] text-white/70">
           {title}
@@ -1110,7 +1114,7 @@ function Hand({
 function FlipDisplayCard({ card, flipped }: { card: Card; flipped: boolean }) {
   const label = card?.rank ?? card?.num ?? "";
   return (
-    <div className="relative h-59 w-40" style={{ perspective: "1200px" }}>
+    <div className="relative h-48 w-32" style={{ perspective: "1200px" }}>
       <div className={`card-flip ${flipped ? "is-flipped" : ""}`}>
         <div className="card__face card__face--front">
           <img src={deckBack} alt="Card back" />

@@ -163,7 +163,7 @@
  /* tune these as you like */
   --card-w: 50px;
   --card-h: 75px;
-  --overlap: 38px;
+  --overlap: 42px;
   --track: calc(var(--card-w) - var(--overlap));
 
   box-sizing: border-box;
