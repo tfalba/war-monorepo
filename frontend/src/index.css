@@ -259,6 +259,35 @@
   border: 2px solid rgba(255, 255, 255, 0.2);
 }
 
+.roulette-wheel__number {
+  position: absolute;
+  inset: 10px;
+  display: grid;
+  place-items: center;
+  transform-origin: center;
+  pointer-events: none;
+}
+
+.roulette-wheel__number-text {
+  transform: translateY(-118px);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #f8f1da;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.65);
+}
+
+.roulette-wheel__number.red .roulette-wheel__number-text {
+  color: #f6d1d1;
+}
+
+.roulette-wheel__number.black .roulette-wheel__number-text {
+  color: #d9d9d9;
+}
+
+.roulette-wheel__number.green .roulette-wheel__number-text {
+  color: #d8f3e4;
+}
+
 .roulette-ball {
   position: absolute;
   width: 18px;

@@ -292,6 +292,15 @@ export default function Roulette() {
               style={{ transform: `rotate(${wheelRotation}deg)` }}
             >
               <div className="roulette-wheel__ring" />
+              {ROULETTE_ORDER.map((num, idx) => (
+                <span
+                  key={`wheel-${num}-${idx}`}
+                  className={`roulette-wheel__number ${getNumberColor(num)}`}
+                  style={{ transform: `rotate(${idx * (360 / ROULETTE_ORDER.length)}deg)` }}
+                >
+                  <span className="roulette-wheel__number-text">{num}</span>
+                </span>
+              ))}
               <div className="roulette-wheel__center">
                 {winningNumber !== null ? winningNumber : "?"}
               </div>
