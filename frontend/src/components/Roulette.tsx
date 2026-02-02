@@ -38,9 +38,11 @@ export default function Roulette() {
   const [wheelRotation, setWheelRotation] = useState(0);
   const [lastWinAmount, setLastWinAmount] = useState(0);
   const [draggingNum, setDraggingNum] = useState<number | null>(null);
-  const dragStateRef = useRef<{ num: number; amount: number; handled: boolean } | null>(
-    null
-  );
+  const dragStateRef = useRef<
+    | { kind: "number"; num: number; amount: number; handled: boolean }
+    | { kind: "color"; color: Color; amount: number; handled: boolean }
+    | null
+  >(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -93,13 +95,33 @@ export default function Roulette() {
     });
   };
 
-  const handleDragStart = (
+  const removeColorBet = (color: Color, amount: number) => {
+    if (amount <= 0) return;
+    setColorBets((prev) => ({
+      ...prev,
+      [color]: Math.max(0, prev[color] - amount),
+    }));
+  };
+
+  const handleDragStartNumber = (
     event: React.DragEvent<HTMLSpanElement>,
     num: number,
     amount: number
   ) => {
-    dragStateRef.current = { num, amount, handled: false };
+    dragStateRef.current = { kind: "number", num, amount, handled: false };
     setDraggingNum(num);
+    const img = new Image();
+    img.src =
+      "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+    event.dataTransfer.setDragImage(img, 0, 0);
+  };
+
+  const handleDragStartColor = (
+    event: React.DragEvent<HTMLSpanElement>,
+    color: Color,
+    amount: number
+  ) => {
+    dragStateRef.current = { kind: "color", color, amount, handled: false };
     const img = new Image();
     img.src =
       "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
@@ -110,19 +132,55 @@ export default function Roulette() {
     const dragState = dragStateRef.current;
     if (!dragState) return;
     dragState.handled = true;
-    if (dragState.num === targetNum) return;
-    setNumberBets((prev) => ({
-      ...prev,
-      [targetNum]: (prev[targetNum] ?? 0) + dragState.amount,
-    }));
-    removeNumberBet(dragState.num, dragState.amount);
+    if (dragState.kind === "number") {
+      if (dragState.num === targetNum) return;
+      setNumberBets((prev) => ({
+        ...prev,
+        [targetNum]: (prev[targetNum] ?? 0) + dragState.amount,
+      }));
+      removeNumberBet(dragState.num, dragState.amount);
+      return;
+    }
+    if (dragState.kind === "color") {
+      setNumberBets((prev) => ({
+        ...prev,
+        [targetNum]: (prev[targetNum] ?? 0) + dragState.amount,
+      }));
+      removeColorBet(dragState.color, dragState.amount);
+    }
+  };
+
+  const handleDropOnColor = (targetColor: Color) => {
+    const dragState = dragStateRef.current;
+    if (!dragState) return;
+    dragState.handled = true;
+    if (dragState.kind === "color") {
+      if (dragState.color === targetColor) return;
+      setColorBets((prev) => ({
+        ...prev,
+        [targetColor]: prev[targetColor] + dragState.amount,
+      }));
+      removeColorBet(dragState.color, dragState.amount);
+      return;
+    }
+    if (dragState.kind === "number") {
+      setColorBets((prev) => ({
+        ...prev,
+        [targetColor]: prev[targetColor] + dragState.amount,
+      }));
+      removeNumberBet(dragState.num, dragState.amount);
+    }
   };
 
   const handleDragEnd = () => {
     const dragState = dragStateRef.current;
     if (!dragState) return;
     if (!dragState.handled) {
-      removeNumberBet(dragState.num, dragState.amount);
+      if (dragState.kind === "number") {
+        removeNumberBet(dragState.num, dragState.amount);
+      } else {
+        removeColorBet(dragState.color, dragState.amount);
+      }
     }
     setDraggingNum(null);
     dragStateRef.current = null;
@@ -290,10 +348,19 @@ export default function Roulette() {
                 style={{ background: "rgba(178, 34, 34, 0.75)" }}
                 onClick={() => handleColorBet("red")}
                 disabled={spinning}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={() => handleDropOnColor("red")}
               >
                 <span className="flex items-center gap-1">
                   <span>Bet Red</span>
-                  <span className="roulette-stack">
+                  <span
+                    className="roulette-stack"
+                    draggable={colorBets.red > 0 && !spinning}
+                    onDragStart={(event) =>
+                      handleDragStartColor(event, "red", colorBets.red)
+                    }
+                    onDragEnd={handleDragEnd}
+                  >
                     {colorBets.red > 0 ? (
                       <span className="roulette-coin">${colorBets.red}</span>
                     ) : (
@@ -306,10 +373,19 @@ export default function Roulette() {
                 className="btn btn-outline"
                 onClick={() => handleColorBet("black")}
                 disabled={spinning}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={() => handleDropOnColor("black")}
               >
                 <span className="flex items-center gap-1">
                   <span>Bet Black</span>
-                  <span className="roulette-stack">
+                  <span
+                    className="roulette-stack"
+                    draggable={colorBets.black > 0 && !spinning}
+                    onDragStart={(event) =>
+                      handleDragStartColor(event, "black", colorBets.black)
+                    }
+                    onDragEnd={handleDragEnd}
+                  >
                     {colorBets.black > 0 ? (
                       <span className="roulette-coin">${colorBets.black}</span>
                     ) : (
@@ -344,7 +420,9 @@ export default function Roulette() {
                     className={`roulette-stack ${draggingNum === num ? "opacity-0" : ""}`}
                     aria-label={`$${betAmount} bet`}
                     draggable={betAmount > 0 && !spinning}
-                    onDragStart={(event) => handleDragStart(event, num, betAmount)}
+                    onDragStart={(event) =>
+                      handleDragStartNumber(event, num, betAmount)
+                    }
                     onDragEnd={handleDragEnd}
                   >
                     {betAmount > 0 ? (
