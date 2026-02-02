@@ -16,6 +16,23 @@ import type {
   Card,
 } from "../types";
 
+type SplitHandStatus =
+  | "player-turn"
+  | "player-bust"
+  | "stand"
+  | "player-win"
+  | "dealer-win"
+  | "dealer-bust"
+  | "push";
+
+type SplitHand = {
+  cards: Card[];
+  value: number;
+  status: SplitHandStatus | string;
+  bet: number;
+  doubled?: boolean;
+};
+
 const statusCopy: Record<BlackjackStatus, string> = {
   "player-turn": "",
   "player-bust": "Player busts!",
@@ -31,6 +48,32 @@ const DEALER_FLIP_DELAY = 450;
 const DEALER_DRAW_DELAY = 900;
 const DECK_STORAGE_KEY = "bj_deck";
 const DISCARD_STORAGE_KEY = "bj_discard";
+
+const getCardValue = (card: Card) => {
+  const num = card.num ?? 0;
+  if (num >= 11 && num <= 13) return 10;
+  if (num === 14) return 11;
+  return num;
+};
+
+const getHandValue = (cards: Card[]) => {
+  let total = 0;
+  let aces = 0;
+  cards.forEach((card) => {
+    total += getCardValue(card);
+    if (card.num === 14) aces += 1;
+  });
+  while (total > 21 && aces > 0) {
+    total -= 10;
+    aces -= 1;
+  }
+  return total;
+};
+
+const drawCard = (cards: Card[]) => {
+  if (cards.length === 0) return { drawn: null, nextDeck: cards };
+  return { drawn: cards[0], nextDeck: cards.slice(1) };
+};
 
 const getStoredBank = () => {
   if (typeof window === "undefined") return 1000;
@@ -85,6 +128,9 @@ export default function BlackJack() {
   const [status, setStatus] = useState<BlackjackStatus>("player-turn");
   const [revealDealer, setRevealDealer] = useState(false);
   const [message, setMessage] = useState("");
+  const [splitHands, setSplitHands] = useState<SplitHand[]>([]);
+  const [activeSplitIndex, setActiveSplitIndex] = useState(0);
+  const [splitResolved, setSplitResolved] = useState(false);
 
   const [bank, setBank] = useState(() => getStoredBank());
   const [bet, setBet] = useState(() => getStoredBet());
@@ -173,6 +219,18 @@ export default function BlackJack() {
     }
   };
 
+  const isSplit = splitHands.length > 0;
+  const activeSplitHand = isSplit ? splitHands[activeSplitIndex] : null;
+  const currentPlayerCards = isSplit
+    ? activeSplitHand?.cards ?? []
+    : playerCards;
+  const currentPlayerValue = isSplit
+    ? activeSplitHand?.value ?? 0
+    : playerValue;
+  const currentPlayerStatus = isSplit
+    ? activeSplitHand?.status ?? "player-turn"
+    : status;
+
   const handleClear = useCallback(() => {
     clearDealerAnimationTimers();
     setPlayerCards([]);
@@ -188,23 +246,28 @@ export default function BlackJack() {
     setAutoStood(false);
     setLastWinAmount(0);
     setActiveBet(0);
+    setSplitHands([]);
+    setActiveSplitIndex(0);
+    setSplitResolved(false);
   }, [clearDealerAnimationTimers]);
 
   const archiveHand = useCallback(() => {
-    if (playerCards.length === 0 && dealerCards.length === 0) {
+    const splitPlayerCards = splitHands.flatMap((hand) => hand.cards);
+    const playerPile = splitPlayerCards.length > 0 ? splitPlayerCards : playerCards;
+    if (playerPile.length === 0 && dealerCards.length === 0) {
       return;
     }
     const dealerPile =
       dealerTargetCards.length > dealerCards.length
         ? dealerTargetCards
         : dealerCards;
-    const moved = playerCards.length + dealerPile.length;
+    const moved = playerPile.length + dealerPile.length;
     if (moved > 0) {
-      setDiscardDeck((prev) => [...playerCards, ...dealerPile, ...prev]);
+      setDiscardDeck((prev) => [...playerPile, ...dealerPile, ...prev]);
       setRecentDiscardCount(moved);
     }
     handleClear();
-  }, [dealerCards, dealerTargetCards, handleClear, playerCards]);
+  }, [dealerCards, dealerTargetCards, handleClear, playerCards, splitHands]);
 
   const handleStart = useCallback(async () => {
     setDeck([]);
@@ -234,7 +297,13 @@ export default function BlackJack() {
     async (bankOverride?: number) => {
       const availableBank = bankOverride ?? bank;
       if (activeBet > 0) return;
-      if (status === "player-turn" && playerCards.length > 0) return;
+      if (
+        !isSplit &&
+        status === "player-turn" &&
+        playerCards.length > 0
+      )
+        return;
+      if (isSplit && !splitResolved) return;
       if (bet < MIN_BET) {
         setMessage("Bet must be at least $10 and within your bankroll.");
         return;
@@ -264,24 +333,238 @@ export default function BlackJack() {
       bet,
       deck,
       handleStart,
+      isSplit,
       playerCards.length,
+      splitResolved,
       status,
     ]
   );
 
+  const handleSplitResolve = useCallback(async (handsOverride?: SplitHand[]) => {
+    const hands = handsOverride ?? splitHands;
+    const needsDealer = hands.some((hand) => hand.status !== "player-bust");
+    if (!needsDealer) {
+      setRevealDealer(true);
+      setSplitResolved(true);
+      setStatus("player-bust");
+      setLastWinAmount(0);
+      setActiveBet(0);
+      setSettled(true);
+      setMessage("Both hands bust.");
+      return;
+    }
+    const resolveHand = hands[hands.length - 1];
+    const result = await bjStand({
+      deck,
+      playerCards: resolveHand?.cards ?? [],
+      dealerCards,
+    });
+    const dealerCardsFinal = result.dealerCards ?? dealerCards;
+    const dealerFinalValue =
+      result.dealerValue ?? getHandValue(dealerCardsFinal);
+    const dealerBust = dealerFinalValue > 21;
+    setDeck(result.deck ?? deck);
+    setDealerTargetCards(dealerCardsFinal);
+    setRevealDealer(true);
+    setDealerHoleFlipped(false);
+    setDealerCards((prev) => (prev.length > 0 ? prev : dealerCardsFinal));
+    setDealerValue(dealerFinalValue);
+
+    let totalPayout = 0;
+    let totalProfit = 0;
+    const resolvedHands = hands.map((hand) => {
+      if (hand.status === "player-bust") {
+        return hand;
+      }
+      let outcome: SplitHandStatus = "push";
+      if (dealerBust) {
+        outcome = "dealer-bust";
+      } else if (hand.value > dealerFinalValue) {
+        outcome = "player-win";
+      } else if (hand.value < dealerFinalValue) {
+        outcome = "dealer-win";
+      } else {
+        outcome = "push";
+      }
+      if (outcome === "push") {
+        totalPayout += hand.bet;
+      } else if (outcome === "player-win" || outcome === "dealer-bust") {
+        totalPayout += hand.bet * 2;
+        totalProfit += hand.bet;
+      }
+      return { ...hand, status: outcome };
+    });
+    setSplitHands(resolvedHands);
+    setLastWinAmount(totalProfit > 0 ? totalProfit : 0);
+    setBank((b) => b + totalPayout);
+    setActiveBet(0);
+    setSettled(true);
+    setSplitResolved(true);
+    const outcomeSummary = resolvedHands
+      .map((hand, idx) => `Hand ${idx + 1}: ${hand.status.replace("-", " ")}`)
+      .join(" • ");
+    setMessage(outcomeSummary);
+  }, [dealerCards, deck, splitHands]);
+
+  const handleSplit = useCallback(() => {
+    if (isSplit) return;
+    if (status !== "player-turn") return;
+    if (playerCards.length !== 2) return;
+    if (playerCards[0]?.num !== playerCards[1]?.num) return;
+    if (activeBet <= 0) return;
+    if (bank < activeBet) {
+      setShowTopUpPrompt(true);
+      return;
+    }
+    const { drawn: drawA, nextDeck: afterA } = drawCard(deck);
+    const { drawn: drawB, nextDeck: afterB } = drawCard(afterA);
+    if (!drawA || !drawB) return;
+    const handA = [playerCards[0], drawA];
+    const handB = [playerCards[1], drawB];
+    const nextHands: SplitHand[] = [
+      {
+        cards: handA,
+        value: getHandValue(handA),
+        status: "player-turn",
+        bet: activeBet,
+      },
+      {
+        cards: handB,
+        value: getHandValue(handB),
+        status: "player-turn",
+        bet: activeBet,
+      },
+    ];
+    setBank((b) => b - activeBet);
+    setActiveBet((prev) => prev * 2);
+    setDeck(afterB);
+    setSplitHands(nextHands);
+    setActiveSplitIndex(0);
+    setSplitResolved(false);
+    setMessage("Split hand. Play hand 1 first.");
+  }, [activeBet, bank, deck, isSplit, playerCards, status]);
+
   const handleHit = useCallback(async () => {
+    if (isSplit) {
+      if (!activeSplitHand || activeSplitHand.status !== "player-turn") return;
+      const data = await bjHit({
+        deck,
+        playerCards: activeSplitHand.cards,
+        dealerCards,
+      });
+      const nextCards = data.playerCards ?? activeSplitHand.cards;
+      const nextValue = data.playerValue ?? getHandValue(nextCards);
+      const nextStatus: SplitHandStatus =
+        nextValue > 21 ? "player-bust" : "player-turn";
+      setDeck(data.deck ?? deck);
+      const nextHands = splitHands.map((hand, idx) =>
+        idx === activeSplitIndex
+          ? { ...hand, cards: nextCards, value: nextValue, status: nextStatus }
+          : hand
+      );
+      setSplitHands(nextHands);
+      setMessage(data.log ?? "");
+      if (nextStatus === "player-bust") {
+        if (activeSplitIndex === 0) {
+          setActiveSplitIndex(1);
+        } else {
+          void handleSplitResolve(nextHands);
+        }
+      }
+      return;
+    }
     if (status !== "player-turn") return;
     const data = await bjHit(roundPayload());
     applyHandState(data);
-  }, [roundPayload, status]);
+  }, [
+    activeSplitHand,
+    activeSplitIndex,
+    dealerCards,
+    deck,
+    handleSplitResolve,
+    isSplit,
+    roundPayload,
+    splitHands,
+    status,
+  ]);
 
   const handleStand = useCallback(async () => {
+    if (isSplit) {
+      if (!activeSplitHand || activeSplitHand.status !== "player-turn") return;
+      const nextHands = splitHands.map((hand, idx) =>
+        idx === activeSplitIndex ? { ...hand, status: "stand" } : hand
+      );
+      setSplitHands(nextHands);
+      setMessage(
+        activeSplitIndex === 0 ? "Hand 1 stands." : "Hand 2 stands."
+      );
+      if (activeSplitIndex === 0) {
+        setActiveSplitIndex(1);
+      } else {
+        void handleSplitResolve(nextHands);
+      }
+      return;
+    }
     if (status !== "player-turn") return;
     const data = await bjStand(roundPayload());
     applyHandState(data);
-  }, [roundPayload, status]);
+  }, [
+    activeSplitHand,
+    activeSplitIndex,
+    handleSplitResolve,
+    isSplit,
+    roundPayload,
+    splitHands,
+    status,
+  ]);
 
   const handleDoubleDown = useCallback(async () => {
+    if (isSplit) {
+      if (!activeSplitHand || activeSplitHand.status !== "player-turn") return;
+      const eligible =
+        activeSplitHand.cards.length === 2 &&
+        (activeSplitHand.value === 10 || activeSplitHand.value === 11) &&
+        activeBet > 0 &&
+        !activeSplitHand.doubled;
+      if (!eligible) return;
+      if (bank < activeSplitHand.bet) {
+        setShowTopUpPrompt(true);
+        return;
+      }
+      setBank((b) => b - activeSplitHand.bet);
+      setActiveBet((prev) => prev + activeSplitHand.bet);
+      const doubledHands = splitHands.map((hand, idx) =>
+        idx === activeSplitIndex
+          ? { ...hand, doubled: true, bet: hand.bet * 2 }
+          : hand
+      );
+      setSplitHands(doubledHands);
+      const data = await bjHit({
+        deck,
+        playerCards: activeSplitHand.cards,
+        dealerCards,
+      });
+      const nextCards = data.playerCards ?? activeSplitHand.cards;
+      const nextValue = data.playerValue ?? getHandValue(nextCards);
+      const nextStatus: SplitHandStatus =
+        nextValue > 21 ? "player-bust" : "stand";
+      setDeck(data.deck ?? deck);
+      const nextHands = doubledHands.map((hand, idx) =>
+        idx === activeSplitIndex
+          ? { ...hand, cards: nextCards, value: nextValue, status: nextStatus }
+          : hand
+      );
+      setSplitHands(nextHands);
+      setMessage(
+        activeSplitIndex === 0 ? "Hand 1 doubles down." : "Hand 2 doubles down."
+      );
+      if (activeSplitIndex === 0) {
+        setActiveSplitIndex(1);
+      } else {
+        void handleSplitResolve(nextHands);
+      }
+      return;
+    }
     const eligible =
       status === "player-turn" &&
       playerCards.length === 2 &&
@@ -304,7 +587,21 @@ export default function BlackJack() {
       });
       applyHandState(standResult);
     }
-  }, [activeBet, bank, playerCards.length, playerValue, roundPayload, status]);
+  }, [
+    activeBet,
+    activeSplitHand,
+    activeSplitIndex,
+    bank,
+    dealerCards,
+    deck,
+    handleSplitResolve,
+    isSplit,
+    playerCards.length,
+    playerValue,
+    roundPayload,
+    splitHands,
+    status,
+  ]);
 
   const handleTopUpAccept = useCallback(() => {
     const nextBank = bank + 1000;
@@ -322,26 +619,44 @@ export default function BlackJack() {
     setSettled(true);
   }
 
-  const canClear =
-    playerCards.length > 0 &&
-    dealerCards.length > 0 &&
-    status !== "player-turn";
+  const hasSplitCards = splitHands.some((hand) => hand.cards.length > 0);
+  const canClear = isSplit
+    ? hasSplitCards && dealerCards.length > 0 && splitResolved
+    : playerCards.length > 0 &&
+      dealerCards.length > 0 &&
+      status !== "player-turn";
   const canDeal =
     deck.length >= 10 && activeBet === 0 && bet <= bank && bank >= MIN_BET;
-  const canAct = status === "player-turn" && playerCards.length > 0;
+  const canAct =
+    currentPlayerStatus === "player-turn" && currentPlayerCards.length > 0;
   const canDoubleDown =
     canAct &&
+    currentPlayerCards.length === 2 &&
+    (currentPlayerValue === 10 || currentPlayerValue === 11) &&
+    activeBet > 0 &&
+    (!isSplit || !activeSplitHand?.doubled);
+  const canSplit =
+    !isSplit &&
+    status === "player-turn" &&
     playerCards.length === 2 &&
-    (playerValue === 10 || playerValue === 11) &&
+    playerCards[0]?.num === playerCards[1]?.num &&
     activeBet > 0;
-  const dealerRevealed = revealDealer || status !== "player-turn";
-  const bust = status === "player-bust";
+  const dealerRevealed =
+    revealDealer || status !== "player-turn" || (isSplit && splitResolved);
+  const bust = currentPlayerStatus === "player-bust";
   const chipsDisabled =
-    (playerCards.length > 0 && status === "player-turn") || activeBet > 0;
+    (((playerCards.length > 0 && status === "player-turn") || activeBet > 0) &&
+      !(isSplit && splitResolved));
   const dealerAnimationsDone =
     !revealDealer ||
     (dealerHoleFlipped && dealerCards.length >= dealerTargetCards.length);
-  const showResultUI = status !== "player-turn" && dealerAnimationsDone;
+  const showResultUI = isSplit
+    ? splitResolved && dealerAnimationsDone
+    : status !== "player-turn" && dealerAnimationsDone;
+  const resultHeading =
+    isSplit && splitResolved
+      ? "Split complete"
+      : statusCopy[status] || "Round complete";
 
   useEffect(() => {
     if (!revealDealer) {
@@ -399,6 +714,7 @@ export default function BlackJack() {
   }, [clearDealerAnimationTimers]);
 
   useEffect(() => {
+    if (isSplit) return;
     if (status !== "player-turn" || activeBet === 0 || settled || autoStood) {
       return;
     }
@@ -410,6 +726,7 @@ export default function BlackJack() {
     setAutoStood(true);
     void handleStand();
   }, [
+    isSplit,
     status,
     playerNatural,
     playerCards.length,
@@ -421,6 +738,7 @@ export default function BlackJack() {
   ]);
 
   useEffect(() => {
+    if (isSplit) return;
     if (
       status === "player-turn" ||
       activeBet === 0 ||
@@ -444,6 +762,7 @@ export default function BlackJack() {
     setActiveBet(0);
     setSettled(true);
   }, [
+    isSplit,
     status,
     activeBet,
     settled,
@@ -547,10 +866,10 @@ export default function BlackJack() {
               flipRevealed={dealerRevealed && dealerHoleFlipped}
             />
           </div>
-          {status !== "player-turn" && dealerAnimationsDone ? (
+          {showResultUI ? (
             <div className="flex items-center justify-end">
               <h2 className="text-4xl font-display text-chipBlue text-outline-gold">
-                {statusCopy[status] || "Round complete"}
+                {resultHeading}
               </h2>
             </div>
           ) : (
@@ -561,15 +880,43 @@ export default function BlackJack() {
             </div>
           )}
           <div className="flex flex-1 flex-col space-y-4 items-center">
-            <Hand
-              label="Player"
-              cards={playerCards}
-              totalLabel={
-                playerCards.length > 0 ? playerValue.toString() : undefined
-              }
-              showFirst
-              highlight={bust ? "Bust" : undefined}
-            />
+            {!isSplit && (
+              <Hand
+                label="Player"
+                cards={currentPlayerCards}
+                totalLabel={
+                  currentPlayerCards.length > 0
+                    ? currentPlayerValue.toString()
+                    : undefined
+                }
+                showFirst
+                highlight={bust ? "Bust" : undefined}
+              />
+            )}
+            {isSplit && (
+              <div className="grid w-full gap-4 md:grid-cols-2">
+                {splitHands.map((hand, idx) => (
+                  <Hand
+                    key={`split-${idx}`}
+                    label={`Hand ${idx + 1}`}
+                    cards={hand.cards}
+                    totalLabel={
+                      hand.cards.length > 0 ? hand.value.toString() : undefined
+                    }
+                    showFirst
+                    highlight={
+                      hand.status === "player-bust"
+                        ? "Bust"
+                        : idx === activeSplitIndex && !splitResolved
+                        ? "Playing"
+                        : hand.status !== "player-turn"
+                        ? hand.status.replace("-", " ")
+                        : undefined
+                    }
+                  />
+                ))}
+              </div>
+            )}
             <div className="flex flex-wrap items-center gap-3 w-full justify-end">
               {canDeal && activeBet === 0 && !showResultUI ? (
                 <button
@@ -595,6 +942,15 @@ export default function BlackJack() {
                   >
                     Hit
                   </button>
+                  {canSplit && (
+                    <button
+                      className="btn btn-outline"
+                      onClick={handleSplit}
+                      disabled={!canAct}
+                    >
+                      Split
+                    </button>
+                  )}
                   {canDoubleDown && (
                     <button
                       className="btn btn-accent"
@@ -717,9 +1073,12 @@ function Hand({
         <p className="text-sm uppercase tracking-[0.35em] text-white/70">
           {label}
         </p>
-        {badge && (
+        {highlight && (
+          <span className="text-sm text-gold">{highlight}</span>
+        )}
+        {totalLabel && (
           <span className="card-total px-4 py-2 text-base">
-            {highlight ? highlight : totalLabel}
+            {totalLabel}
           </span>
         )}
       </div>
