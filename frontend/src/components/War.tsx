@@ -13,6 +13,11 @@ const FACE_LOOKUP: Record<string, number> = {
   A: 14,
 };
 
+const BANK_STORAGE_KEY = "bj_bank";
+const WAR_BET_STORAGE_KEY = "war_bet";
+const MIN_BET = 1;
+const WIN_RATIO_EXPONENT = 0.45;
+
 function getCardValue(card: Card | null): number {
   if (!card) return 0;
   if (typeof card.num === "number") return card.num;
@@ -34,9 +39,35 @@ function determineWinner(cardA: Card | null, cardB: Card | null) {
   return valueA > valueB ? "A" : "B";
 }
 
+const getStoredBank = () => {
+  if (typeof window === "undefined") return 1000;
+  const storedBank = Number(window.localStorage.getItem(BANK_STORAGE_KEY));
+  return Number.isFinite(storedBank) && storedBank > 0 ? storedBank : 1000;
+};
+
+const getStoredBet = () => {
+  if (typeof window === "undefined") return MIN_BET;
+  const storedBet = Number(window.localStorage.getItem(WAR_BET_STORAGE_KEY));
+  return Number.isFinite(storedBet) && storedBet >= MIN_BET
+    ? storedBet
+    : MIN_BET;
+};
+
+const getWinMultiplier = (dealerCount: number, playerCount: number) => {
+  if (dealerCount <= 0 || playerCount <= 0) return 1;
+  const ratio = dealerCount / playerCount;
+  return Math.pow(ratio, WIN_RATIO_EXPONENT);
+};
+
 export default function War() {
   const [battleRevealed, setBattleRevealed] = useState(false);
   const [battleEntering, setBattleEntering] = useState(false);
+  const [bank, setBank] = useState(() => getStoredBank());
+  const [bet, setBet] = useState(() => getStoredBet());
+  const [activeBet, setActiveBet] = useState(0);
+  const [betMessage, setBetMessage] = useState("");
+  const [warSettled, setWarSettled] = useState(true);
+  const [lastWinAmount, setLastWinAmount] = useState(0);
 
   const {
     handleStart,
@@ -52,11 +83,28 @@ export default function War() {
     bonus,
     prevBonus,
     warRound,
+    winningPlayer,
     prevWinningPlayer,
     roundNumber,
     storageReady,
     hasStoredGame,
   } = useGameHelpers();
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(BANK_STORAGE_KEY, bank.toString());
+  }, [bank]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem(WAR_BET_STORAGE_KEY, bet.toString());
+  }, [bet]);
+
+  const clampBetValue = (value: number) => {
+    if (bank <= 0) return 0;
+    const next = Math.max(MIN_BET, Math.floor(value));
+    return Math.min(next, bank);
+  };
 
   useEffect(() => {
     if (!storageReady) return;
@@ -67,11 +115,38 @@ export default function War() {
 
   const playRoundWithFade = () => {
     if (!canPlay) return;
+    if (activeBet > 0) return;
+    if (bet <= 0) {
+      setBetMessage("Enter a bet to play.");
+      return;
+    }
+    if (bet > bank) {
+      setBetMessage("Bet exceeds bankroll.");
+      return;
+    }
+    setBetMessage("");
+    setLastWinAmount(0);
+    setWarSettled(false);
+    setBank((b) => b - bet);
+    setActiveBet(bet);
     setBattleEntering(true);
     void handleRound();
   };
 
   const resolveWarWithFade = () => {
+    if (bet <= 0) {
+      setBetMessage("Enter a bet to continue the war.");
+      return;
+    }
+    if (bet > bank) {
+      setBetMessage("Need more bankroll to match the war bet.");
+      return;
+    }
+    setBetMessage("");
+    setLastWinAmount(0);
+    setWarSettled(false);
+    setBank((b) => b - bet);
+    setActiveBet((prev) => prev + bet);
     setBattleEntering(true);
     void handleWar();
   };
@@ -98,6 +173,9 @@ export default function War() {
       : { label: "Play Round", class: "btn-accent" };
   const canPlay = deckA.length > 0 && deckB.length > 0;
   const showBattle = Boolean(cardA && cardB);
+  const canAdjustBet = activeBet === 0 && !showBattle;
+  const winMultiplier = getWinMultiplier(deckA.length, deckB.length);
+  const winYield = Math.floor(bet * winMultiplier);
 
   useEffect(() => {
     setBattleRevealed(false);
@@ -108,6 +186,35 @@ export default function War() {
     const timeout = setTimeout(() => setBattleEntering(false), 450);
     return () => clearTimeout(timeout);
   }, [battleEntering]);
+
+  useEffect(() => {
+    if (!battleRevealed || warRound) return;
+    if (!winningPlayer || activeBet === 0 || warSettled) return;
+    const wager = activeBet;
+    const outcomeMultiplier = getWinMultiplier(deckA.length, deckB.length);
+    const outcomeYield = Math.floor(wager * outcomeMultiplier);
+    let payout = 0;
+    let resultMessage = "Dealer wins.";
+    if (winningPlayer === "B") {
+      payout = wager + outcomeYield;
+      resultMessage = `Player wins $${outcomeYield.toFixed(0)}.`;
+      setLastWinAmount(outcomeYield);
+    } else {
+      setLastWinAmount(0);
+    }
+    setBank((b) => b + payout);
+    setActiveBet(0);
+    setWarSettled(true);
+    setBetMessage(resultMessage);
+  }, [
+    activeBet,
+    battleRevealed,
+    deckA.length,
+    deckB.length,
+    warRound,
+    warSettled,
+    winningPlayer,
+  ]);
 
   return (
     <section className="space-y-6">
@@ -164,6 +271,22 @@ export default function War() {
           onDeal={playRoundWithFade}
           canPlay={canPlay}
           onResolveWar={resolveWarWithFade}
+          bank={bank}
+          bet={bet}
+          activeBet={activeBet}
+          canAdjustBet={canAdjustBet}
+          onBetChange={(value) => setBet(clampBetValue(value))}
+          winYield={winYield}
+          onAdjustBet={(delta) => {
+            if (!canAdjustBet) return;
+            setBet((prev) => clampBetValue(prev + delta));
+          }}
+          onClearBet={() => {
+            if (!canAdjustBet) return;
+            setBet(clampBetValue(MIN_BET));
+          }}
+          betMessage={betMessage}
+          lastWinAmount={lastWinAmount}
         />
 
         <DisplayPlayerDeck
@@ -231,6 +354,7 @@ function DisplayPlayerDeck({
 }) {
   const cards = player === "A" ? prevDeckA : prevDeckB;
   const winner = winningPlayer === player;
+  const playerLabel = player === "A" ? "Dealer" : "Player";
   const handlePlay =
     cardA && cardB ? (warRound ? handleWar : handleClear) : handleRound;
 
@@ -248,7 +372,7 @@ function DisplayPlayerDeck({
       <div className="flex items-center justify-between">
         <div>
           <p className=" uppercase tracking-[0.2em] text-paper/90 font-light">
-            Player {player}
+            {playerLabel}
           </p>
           {winner && (
             <p className="text-sm font-semibold text-gold">Won last battle</p>
@@ -286,6 +410,16 @@ function BattleArena({
   onDeal,
   canPlay,
   onResolveWar,
+  bank,
+  bet,
+  winYield,
+  activeBet,
+  canAdjustBet,
+  onBetChange,
+  onAdjustBet,
+  onClearBet,
+  betMessage,
+  lastWinAmount,
 }: {
   cardA: Card | null;
   cardB: Card | null;
@@ -298,6 +432,16 @@ function BattleArena({
   onDeal: () => void;
   canPlay: boolean;
   onResolveWar: () => void;
+  bank: number;
+  bet: number;
+  winYield: number;
+  activeBet: number;
+  canAdjustBet: boolean;
+  onBetChange: (value: number) => void;
+  onAdjustBet: (delta: number) => void;
+  onClearBet: () => void;
+  betMessage: string;
+  lastWinAmount: number;
 }) {
   const hasBattle = Boolean(showBattle && cardA && cardB);
   const baseContainer =
@@ -385,6 +529,80 @@ function BattleArena({
               Deal Next Battle
             </button>
           )
+        )}
+      </div>
+      <div className="w-full rounded-2xl border border-gold/20 bg-black/20 px-4 py-3">
+        <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-white/60">
+          <span>Bankroll</span>
+          <span className="text-base font-semibold text-white">
+            ${bank.toFixed(0)}
+          </span>
+        </div>
+        <div className="mt-2 grid gap-2 text-xs uppercase tracking-[0.28em] text-white/50 sm:grid-cols-2">
+          <span>Current Bet</span>
+          <span className="text-right text-sm font-semibold text-white/90">
+            ${bet.toFixed(0)}
+          </span>
+          <span>Win Yield</span>
+          <span className="text-right text-sm font-semibold text-emerald-100">
+            +${winYield.toFixed(0)}
+          </span>
+          <span>In Play</span>
+          <span className="text-right text-sm font-semibold text-white/90">
+            ${activeBet.toFixed(0)}
+          </span>
+        </div>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+          <label className="flex flex-1 items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/60">
+            Bet
+            <input
+              type="number"
+              min={1}
+              step={1}
+              value={Number.isFinite(bet) ? bet : 0}
+              onChange={(e) => onBetChange(Number(e.target.value))}
+              disabled={!canAdjustBet}
+              className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-gold/50"
+            />
+          </label>
+          <button
+            className="btn btn-outline"
+            onClick={onClearBet}
+            disabled={!canAdjustBet}
+          >
+            Clear Bet
+          </button>
+        </div>
+        <div className="mt-3 flex flex-wrap items-center justify-center gap-3">
+          <button
+            className="chip-btn bg-white text-ink chip-btn-white"
+            onClick={() => onAdjustBet(5)}
+            disabled={!canAdjustBet}
+          >
+            +$5
+          </button>
+          <button
+            className="chip-btn bg-chipRed text-white"
+            onClick={() => onAdjustBet(20)}
+            disabled={!canAdjustBet}
+          >
+            +$20
+          </button>
+          <button
+            className="chip-btn bg-chipBlue text-white"
+            onClick={() => onAdjustBet(100)}
+            disabled={!canAdjustBet}
+          >
+            +$100
+          </button>
+        </div>
+        {betMessage && (
+          <p className="mt-3 text-xs text-gold/80">{betMessage}</p>
+        )}
+        {lastWinAmount > 0 && (
+          <p className="mt-2 text-xs text-emerald-100">
+            Won ${lastWinAmount.toFixed(0)}
+          </p>
         )}
       </div>
     </div>
