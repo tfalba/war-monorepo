@@ -305,7 +305,7 @@
   border: 1px solid rgba(255, 255, 255, 0.15);
   background: rgba(0, 0, 0, 0.5);
   text-align: center;
-  height: 40px;
+  height: 46px;
 }
 
 .roulette-number em {
@@ -333,8 +333,8 @@
 }
 
 .roulette-coin {
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   border-radius: 9999px;
   background: #f2cd5f;
   color: #2b1b00;

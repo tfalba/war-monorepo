@@ -3,12 +3,11 @@ import { useEffect, useMemo, useState } from "react";
 type Color = "red" | "black" | "green";
 
 const BANK_STORAGE_KEY = "bj_bank";
-const MIN_BET = 5;
 const SPIN_DURATION_MS = 2200;
 
 const ROULETTE_ORDER = [
-  0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10,
-  5, 24, 16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 28, 12, 35, 3, 26,
+  0, 32, 15, 19, 4, 21, 2, 25, 17, 34, 6, 27, 13, 36, 11, 30, 8, 23, 10, 5, 24,
+  16, 33, 1, 20, 14, 31, 9, 22, 18, 29, 7, 36, 12, 35, 3, 26,
 ];
 
 const RED_NUMBERS = new Set([
@@ -45,8 +44,14 @@ export default function Roulette() {
   }, [bank]);
 
   const totalBet = useMemo(() => {
-    const numberTotal = Object.values(numberBets).reduce((sum, amt) => sum + amt, 0);
-    const colorTotal = Object.values(colorBets).reduce((sum, amt) => sum + amt, 0);
+    const numberTotal = Object.values(numberBets).reduce(
+      (sum, amt) => sum + amt,
+      0,
+    );
+    const colorTotal = Object.values(colorBets).reduce(
+      (sum, amt) => sum + amt,
+      0,
+    );
     return numberTotal + colorTotal;
   }, [colorBets, numberBets]);
 
@@ -70,30 +75,10 @@ export default function Roulette() {
     });
   };
 
-  const clearNumberBet = (num: number) => {
-    if (spinning) return;
-    const amount = numberBets[num] ?? 0;
-    if (amount <= 0) return;
-    setNumberBets((prev) => {
-      const next = { ...prev };
-      delete next[num];
-      return next;
-    });
-    setBank((b) => b + amount);
-  };
-
   const handleColorBet = (color: Color) => {
     placeBet(() => {
       setColorBets((prev) => ({ ...prev, [color]: prev[color] + chipValue }));
     });
-  };
-
-  const clearColorBet = (color: Color) => {
-    if (spinning) return;
-    const amount = colorBets[color];
-    if (amount <= 0) return;
-    setColorBets((prev) => ({ ...prev, [color]: 0 }));
-    setBank((b) => b + amount);
   };
 
   const resetBets = () => {
@@ -117,7 +102,10 @@ export default function Roulette() {
     if (resultColor === "green" && colorBets.green > 0) {
       payout += colorBets.green * 36;
       profit += colorBets.green * 35;
-    } else if ((resultColor === "red" || resultColor === "black") && colorBet > 0) {
+    } else if (
+      (resultColor === "red" || resultColor === "black") &&
+      colorBet > 0
+    ) {
       payout += colorBet * 2;
       profit += colorBet;
     }
@@ -168,7 +156,11 @@ export default function Roulette() {
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <button className="btn btn-primary" onClick={handleSpin} disabled={spinning}>
+          <button
+            className="btn btn-primary"
+            onClick={handleSpin}
+            disabled={spinning}
+          >
             {spinning ? "Spinning..." : "Spin Wheel"}
           </button>
           <button
@@ -203,23 +195,19 @@ export default function Roulette() {
                 ${bank.toFixed(0)}
               </span>
             </div>
-            <div className="mt-2 flex items-center justify-between text-xs uppercase tracking-[0.28em] text-white/50">
-              
+            <div className="mt-2 flex items-center justify-between text-xs uppercase tracking-[0.36em] text-white/50">
               <span>Total Bet</span>
               <span className="text-right text-sm font-semibold text-white/90">
                 ${totalBet.toFixed(0)}
               </span>
-              </div>
-                         <div className="mt-2 flex items-center justify-between text-xs uppercase tracking-[0.28em] text-white/50">
-
+            </div>
+            <div className="mt-2 flex items-center justify-between text-xs uppercase tracking-[0.36em] text-white/50">
               <span>Last Win</span>
               <span className="text-right text-sm font-semibold text-emerald-100">
                 ${lastWinAmount.toFixed(0)}
               </span>
             </div>
-            {message && (
-              <p className="mt-3 text-xs text-gold/80">{message}</p>
-            )}
+            {message && <p className="mt-3 text-xs text-gold/80">{message}</p>}
           </div>
 
           <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
@@ -252,28 +240,11 @@ export default function Roulette() {
               >
                 <span className="flex items-center gap-1">
                   <span>Bet Red</span>
-                  <span
-                    className="roulette-stack"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      clearColorBet("red");
-                    }}
-                  >
+                  <span className="roulette-stack">
                     {colorBets.red > 0 ? (
-                      Array.from({
-                        length: Math.min(
-                          1,
-                          Math.min(1, Math.ceil(colorBets.red / 20))
-                        ),
-                      }).map((_, idx, arr) => (
-                        <span key={`red-${idx}`} className="roulette-coin">
-                          {idx === arr.length - 1
-                            ? `$${colorBets.red}`
-                            : ""}
-                        </span>
-                      ))
+                      <span className="roulette-coin">${colorBets.red}</span>
                     ) : (
-                      <span className="w-[28px] h-[28px] opacity-60"></span>
+                      <span className="w-[36px] h-[36px] opacity-60"></span>
                     )}
                   </span>
                 </span>
@@ -285,28 +256,11 @@ export default function Roulette() {
               >
                 <span className="flex items-center gap-1">
                   <span>Bet Black</span>
-                  <span
-                    className="roulette-stack"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      clearColorBet("black");
-                    }}
-                  >
+                  <span className="roulette-stack">
                     {colorBets.black > 0 ? (
-                      Array.from({
-                        length: Math.min(
-                          1,
-                          Math.min(1, Math.ceil(colorBets.black / 20))
-                        ),
-                      }).map((_, idx, arr) => (
-                        <span key={`black-${idx}`} className="roulette-coin">
-                          {idx === arr.length - 1
-                            ? `$${colorBets.black}`
-                            : ""}
-                        </span>
-                      ))
+                      <span className="roulette-coin">${colorBets.black}</span>
                     ) : (
-                      <span className="w-[28px] h-[28px] opacity-60"></span>
+                      <span className="w-[36px] h-[36px] opacity-60"></span>
                     )}
                   </span>
                 </span>
@@ -322,10 +276,7 @@ export default function Roulette() {
               const color = getNumberColor(num);
               const betAmount = numberBets[num] ?? 0;
               const isWinner = winningNumber === num;
-              const coinCount = Math.min(
-                5,
-                Math.max(1, Math.ceil(betAmount / 20))
-              );
+             
               return (
                 <button
                   key={num}
@@ -337,19 +288,18 @@ export default function Roulette() {
                   <span
                     className="roulette-stack"
                     aria-label={`$${betAmount} bet`}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      clearNumberBet(num);
-                    }}
                   >
                     {betAmount > 0 ? (
                       Array.from({ length: 1 }).map((_, idx) => (
-                        <span key={`coin-${num}-${idx}`} className="roulette-coin">
-                          {idx === coinCount - 1 ? `$${betAmount}` : ""}
+                        <span
+                          key={`coin-${num}-${idx}`}
+                          className="roulette-coin"
+                        >
+                          ${betAmount}
                         </span>
                       ))
                     ) : (
-                      <span className="opacity-60"></span>
+                      <span className=" opacity-60"></span>
                     )}
                   </span>
                 </button>
