@@ -212,3 +212,112 @@
 .deck { row-gap: 10px; }
 .deck .card { position: relative; }
 .deck .card:nth-child(odd) { top: 2px; }  /* playful offset */
+
+/* Roulette */
+.roulette-wheel-wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 320px;
+}
+
+.roulette-wheel {
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background:
+    conic-gradient(#0a7a48 0deg 9.5deg, transparent 9.5deg 360deg),
+    radial-gradient(circle at center, rgba(12, 12, 12, 0.9) 0 35%, transparent 36%),
+    repeating-conic-gradient(
+      from 0deg,
+      #b12222 0deg 9.5deg,
+      #0f0f0f 9.5deg 19deg
+    );
+  border: 8px solid rgba(255, 215, 0, 0.4);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  position: relative;
+  transition: transform 2.2s cubic-bezier(0.2, 0.9, 0.1, 1);
+}
+
+.roulette-wheel__ring {
+  position: absolute;
+  inset: 16px;
+  border-radius: 50%;
+  border: 2px dashed rgba(255, 255, 255, 0.35);
+}
+
+.roulette-wheel__center {
+  position: absolute;
+  inset: 35%;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.85);
+  color: #f6e3a4;
+  display: grid;
+  place-items: center;
+  font-size: 2rem;
+  font-weight: 600;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.roulette-ball {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #f7f7f7;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  transition: transform 0.4s ease;
+}
+
+.roulette-ball.is-bouncing {
+  animation: roulette-ball-bounce 0.35s ease-in-out infinite alternate;
+}
+
+@keyframes roulette-ball-bounce {
+  from {
+    transform: translateX(-50%) translateY(0);
+  }
+  to {
+    transform: translateX(-50%) translateY(8px);
+  }
+}
+
+.roulette-board {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.roulette-number {
+  border-radius: 14px;
+  padding: 10px 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  display: grid;
+  gap: 4px;
+  color: #f8f8f8;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.5);
+  text-align: center;
+}
+
+.roulette-number em {
+  font-style: normal;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.roulette-number.red {
+  background: rgba(178, 34, 34, 0.75);
+}
+
+.roulette-number.black {
+  background: rgba(18, 18, 18, 0.85);
+}
+
+.roulette-number.green {
+  background: rgba(0, 120, 70, 0.85);
+}

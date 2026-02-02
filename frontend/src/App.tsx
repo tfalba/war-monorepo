@@ -1,14 +1,14 @@
 import { useState } from "react";
 import War from "./components/War";
 import BlackJack from "./components/BlackJack";
+import Roulette from "./components/Roulette";
 
-type Game = "War" | "Blackjack";
+type Game = "War" | "Blackjack" | "Roulette";
 
 export default function App() {
   const [selectedGame, setSelectedGame] = useState<Game>("War");
 
-  const toggleGame = () =>
-    setSelectedGame((prev) => (prev === "War" ? "Blackjack" : "War"));
+  const games: Game[] = ["War", "Blackjack", "Roulette"];
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-emeraldDeep via-felt to-table text-paper">
@@ -21,12 +21,26 @@ export default function App() {
             <h1 className="text-5xl font-cursive font-semibold text-gold/90">{selectedGame}</h1>
            
           </div>
-          <button className="btn btn-outline-paper" onClick={toggleGame}>
-            Switch to {selectedGame === "War" ? "Blackjack" : "War"}
-          </button>
+          <div className="flex flex-wrap gap-2">
+            {games.map((game) => (
+              <button
+                key={game}
+                className={`btn ${selectedGame === game ? "btn-primary" : "btn-outline-paper"}`}
+                onClick={() => setSelectedGame(game)}
+              >
+                {game}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {selectedGame === "War" ? <War /> : <BlackJack />}
+        {selectedGame === "War" ? (
+          <War />
+        ) : selectedGame === "Blackjack" ? (
+          <BlackJack />
+        ) : (
+          <Roulette />
+        )}
       </div>
     </div>
   );
