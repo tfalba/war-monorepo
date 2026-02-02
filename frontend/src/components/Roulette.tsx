@@ -70,10 +70,30 @@ export default function Roulette() {
     });
   };
 
+  const clearNumberBet = (num: number) => {
+    if (spinning) return;
+    const amount = numberBets[num] ?? 0;
+    if (amount <= 0) return;
+    setNumberBets((prev) => {
+      const next = { ...prev };
+      delete next[num];
+      return next;
+    });
+    setBank((b) => b + amount);
+  };
+
   const handleColorBet = (color: Color) => {
     placeBet(() => {
       setColorBets((prev) => ({ ...prev, [color]: prev[color] + chipValue }));
     });
+  };
+
+  const clearColorBet = (color: Color) => {
+    if (spinning) return;
+    const amount = colorBets[color];
+    if (amount <= 0) return;
+    setColorBets((prev) => ({ ...prev, [color]: 0 }));
+    setBank((b) => b + amount);
   };
 
   const resetBets = () => {
@@ -105,7 +125,6 @@ export default function Roulette() {
     setBank((b) => b + payout);
     setLastWinAmount(profit);
     setMessage(profit > 0 ? `You win $${profit}.` : "No win this spin.");
-    resetBets();
   };
 
   const handleSpin = () => {
@@ -184,11 +203,15 @@ export default function Roulette() {
                 ${bank.toFixed(0)}
               </span>
             </div>
-            <div className="mt-2 grid gap-2 text-xs uppercase tracking-[0.28em] text-white/50 sm:grid-cols-2">
+            <div className="mt-2 flex items-center justify-between text-xs uppercase tracking-[0.28em] text-white/50">
+              
               <span>Total Bet</span>
               <span className="text-right text-sm font-semibold text-white/90">
                 ${totalBet.toFixed(0)}
               </span>
+              </div>
+                         <div className="mt-2 flex items-center justify-between text-xs uppercase tracking-[0.28em] text-white/50">
+
               <span>Last Win</span>
               <span className="text-right text-sm font-semibold text-emerald-100">
                 ${lastWinAmount.toFixed(0)}
@@ -222,25 +245,71 @@ export default function Roulette() {
           <div className="rounded-3xl border border-white/10 bg-black/40 p-6 shadow-soft">
             <div className="flex flex-wrap items-center gap-3">
               <button
-                className="btn btn-primary"
+                className="btn text-white focus-visible:outline-gold/60"
+                style={{ background: "rgba(178, 34, 34, 0.75)" }}
                 onClick={() => handleColorBet("red")}
                 disabled={spinning}
               >
-                Bet Red ${colorBets.red || 0}
+                <span className="flex items-center gap-1">
+                  <span>Bet Red</span>
+                  <span
+                    className="roulette-stack"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      clearColorBet("red");
+                    }}
+                  >
+                    {colorBets.red > 0 ? (
+                      Array.from({
+                        length: Math.min(
+                          1,
+                          Math.min(1, Math.ceil(colorBets.red / 20))
+                        ),
+                      }).map((_, idx, arr) => (
+                        <span key={`red-${idx}`} className="roulette-coin">
+                          {idx === arr.length - 1
+                            ? `$${colorBets.red}`
+                            : ""}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="w-[28px] h-[28px] opacity-60"></span>
+                    )}
+                  </span>
+                </span>
               </button>
               <button
                 className="btn btn-outline"
                 onClick={() => handleColorBet("black")}
                 disabled={spinning}
               >
-                Bet Black ${colorBets.black || 0}
-              </button>
-              <button
-                className="btn btn-accent"
-                onClick={() => handleColorBet("green")}
-                disabled={spinning}
-              >
-                Bet Green ${colorBets.green || 0}
+                <span className="flex items-center gap-1">
+                  <span>Bet Black</span>
+                  <span
+                    className="roulette-stack"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      clearColorBet("black");
+                    }}
+                  >
+                    {colorBets.black > 0 ? (
+                      Array.from({
+                        length: Math.min(
+                          1,
+                          Math.min(1, Math.ceil(colorBets.black / 20))
+                        ),
+                      }).map((_, idx, arr) => (
+                        <span key={`black-${idx}`} className="roulette-coin">
+                          {idx === arr.length - 1
+                            ? `$${colorBets.black}`
+                            : ""}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="w-[28px] h-[28px] opacity-60"></span>
+                    )}
+                  </span>
+                </span>
               </button>
             </div>
             <p className="mt-3 text-xs text-white/60">
@@ -252,15 +321,37 @@ export default function Roulette() {
             {numberButtons.map((num) => {
               const color = getNumberColor(num);
               const betAmount = numberBets[num] ?? 0;
+              const isWinner = winningNumber === num;
+              const coinCount = Math.min(
+                5,
+                Math.max(1, Math.ceil(betAmount / 20))
+              );
               return (
                 <button
                   key={num}
-                  className={`roulette-number ${color}`}
+                  className={`roulette-number ${color} ${isWinner ? "winner" : ""}`}
                   onClick={() => handleNumberBet(num)}
                   disabled={spinning}
                 >
                   <span>{num}</span>
-                  {betAmount > 0 && <em>${betAmount}</em>}
+                  <span
+                    className="roulette-stack"
+                    aria-label={`$${betAmount} bet`}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      clearNumberBet(num);
+                    }}
+                  >
+                    {betAmount > 0 ? (
+                      Array.from({ length: 1 }).map((_, idx) => (
+                        <span key={`coin-${num}-${idx}`} className="roulette-coin">
+                          {idx === coinCount - 1 ? `$${betAmount}` : ""}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="opacity-60"></span>
+                    )}
+                  </span>
                 </button>
               );
             })}

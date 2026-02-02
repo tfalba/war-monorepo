@@ -296,12 +296,16 @@
   padding: 10px 8px;
   font-size: 0.95rem;
   font-weight: 600;
-  display: grid;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
   gap: 4px;
   color: #f8f8f8;
   border: 1px solid rgba(255, 255, 255, 0.15);
   background: rgba(0, 0, 0, 0.5);
   text-align: center;
+  height: 40px;
 }
 
 .roulette-number em {
@@ -320,4 +324,39 @@
 
 .roulette-number.green {
   background: rgba(0, 120, 70, 0.85);
+}
+
+.roulette-stack {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.roulette-coin {
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background: #f2cd5f;
+  color: #2b1b00;
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  box-shadow:
+    0 3px 6px rgba(0, 0, 0, 0.35),
+    inset 0 2px 2px rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.roulette-coin + .roulette-coin {
+  margin-top: -6px;
+}
+
+.roulette-number.winner {
+  border: 2px solid #f2cd5f;
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.55),
+    0 0 12px rgba(242, 205, 95, 0.6),
+    inset 0 0 0 2px rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
 }
