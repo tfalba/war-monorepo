@@ -37,6 +37,7 @@ export default function Roulette() {
   const [winningNumber, setWinningNumber] = useState<number | null>(null);
   const [wheelRotation, setWheelRotation] = useState(0);
   const [lastWinAmount, setLastWinAmount] = useState(0);
+  const [draggingNum, setDraggingNum] = useState<number | null>(null);
   const dragStateRef = useRef<{ num: number; amount: number; handled: boolean } | null>(
     null
   );
@@ -92,8 +93,17 @@ export default function Roulette() {
     });
   };
 
-  const handleDragStart = (num: number, amount: number) => {
+  const handleDragStart = (
+    event: React.DragEvent<HTMLSpanElement>,
+    num: number,
+    amount: number
+  ) => {
     dragStateRef.current = { num, amount, handled: false };
+    setDraggingNum(num);
+    const img = new Image();
+    img.src =
+      "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+    event.dataTransfer.setDragImage(img, 0, 0);
   };
 
   const handleDropOnNumber = (targetNum: number) => {
@@ -114,6 +124,7 @@ export default function Roulette() {
     if (!dragState.handled) {
       removeNumberBet(dragState.num, dragState.amount);
     }
+    setDraggingNum(null);
     dragStateRef.current = null;
   };
 
@@ -330,10 +341,10 @@ export default function Roulette() {
                 >
                   <span>{num}</span>
                   <span
-                    className="roulette-stack"
+                    className={`roulette-stack ${draggingNum === num ? "opacity-0" : ""}`}
                     aria-label={`$${betAmount} bet`}
                     draggable={betAmount > 0 && !spinning}
-                    onDragStart={() => handleDragStart(num, betAmount)}
+                    onDragStart={(event) => handleDragStart(event, num, betAmount)}
                     onDragEnd={handleDragEnd}
                   >
                     {betAmount > 0 ? (
