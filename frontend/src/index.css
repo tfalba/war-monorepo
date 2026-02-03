@@ -220,12 +220,14 @@
   position: relative;
   display: grid;
   place-items: center;
-  height: 576px;
+  height: calc(var(--wheel-size, 504px) * 1.14);
+  max-height: calc(var(--wheel-size, 504px) * 1.14);
 }
 
 .roulette-wheel {
-  width: 504px;
-  height: 504px;
+  --wheel-size: min(504px, 90vw);
+  width: var(--wheel-size);
+  height: var(--wheel-size);
   border-radius: 50%;
   background:
     conic-gradient(#0a7a48 0deg 9.5deg, transparent 9.5deg 360deg),
@@ -243,7 +245,7 @@
 
 .roulette-wheel__ring {
   position: absolute;
-  inset: 16px;
+  inset: calc(var(--wheel-size) * 0.03);
   border-radius: 50%;
   border: 2px dashed rgba(255, 255, 255, 0.35);
 }
@@ -280,7 +282,7 @@
 
 .roulette-wheel__number {
   position: absolute;
-  inset: 14px;
+  inset: calc(var(--wheel-size) * 0.035);
   display: grid;
   place-items: center;
   transform-origin: center;
@@ -288,8 +290,8 @@
 }
 
 .roulette-wheel__number-text {
-  transform: translateY(-210px) rotate(90deg);
-  font-size: 1.05rem;
+  transform: translateY(calc(var(--wheel-size) * -0.415)) rotate(90deg);
+  font-size: clamp(0.7rem, calc(var(--wheel-size) * 0.022), 1.05rem);
   font-weight: 800;
   color: #f8f1da;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.65);
@@ -346,7 +348,7 @@
 
 .roulette-board {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
 }
 

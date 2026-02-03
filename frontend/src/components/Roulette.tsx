@@ -566,7 +566,7 @@ export default function Roulette() {
                 onDragOver={(event) => event.preventDefault()}
                 onDrop={() => handleDropOnColor("red")}
               >
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1 h-[36px]">
                   <span>Bet Red</span>
                   <span
                     className="roulette-stack"
@@ -591,7 +591,7 @@ export default function Roulette() {
                 onDragOver={(event) => event.preventDefault()}
                 onDrop={() => handleDropOnColor("black")}
               >
-                <span className="flex items-center gap-1">
+                <span className="flex items-center gap-1 h-[36px]">
                   <span>Bet Black</span>
                   <span
                     className="roulette-stack"
