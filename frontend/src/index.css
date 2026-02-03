@@ -295,10 +295,9 @@
   border-radius: 50%;
   background: #f7f7f7;
   box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-  top: 18px;
+  top: 16px;
   left: 50%;
   transform: translateX(-50%);
-  transition: transform 0.4s ease;
 }
 
 .roulette-ball.is-bouncing {
@@ -314,9 +313,16 @@
   }
 }
 
+.roulette-ball-orbit {
+  position: absolute;
+  inset: 0;
+  transform-origin: center;
+  transition: transform 2.2s cubic-bezier(0.2, 0.9, 0.1, 1);
+}
+
 .roulette-board {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
 
