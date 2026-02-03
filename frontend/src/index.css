@@ -364,14 +364,14 @@
   position: relative;
   display: grid;
   place-items: center;
+  letter-spacing: normal;
 }
 
 .roulette-coin {
   width: 36px;
   height: 36px;
   border-radius: 9999px;
-  background: #f2cd5f;
-  color: #2b1b00;
+  color: #1b1200;
   font-size: 0.7rem;
   font-weight: 700;
   display: grid;
@@ -380,6 +380,21 @@
     0 3px 6px rgba(0, 0, 0, 0.35),
     inset 0 2px 2px rgba(255, 255, 255, 0.35);
   border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+.roulette-coin--white {
+  background: #f8f4ec;
+  color: #1b1200;
+}
+
+.roulette-coin--red {
+  background: var(--color-chipRed);
+  color: #fff6f0;
+}
+
+.roulette-coin--blue {
+  background: var(--color-chipBlue);
+  color: #eef6ff;
 }
 
 .roulette-coin + .roulette-coin {

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 type Color = "red" | "black" | "green";
+type BetStack = { amount: number; chip: number };
 
 const BANK_STORAGE_KEY = "bj_bank";
 const SPIN_DURATION_MS = 2200;
@@ -74,18 +75,36 @@ const getNumberColor = (num: string): Color => {
   return RED_NUMBERS.has(num) ? "red" : "black";
 };
 
+const DEFAULT_CHIP = 5;
+
+const getChipClass = (chip: number) => {
+  if (chip >= 100) return "roulette-coin roulette-coin--blue";
+  if (chip >= 20) return "roulette-coin roulette-coin--red";
+  return "roulette-coin roulette-coin--white";
+};
+
+const getChipForAmount = (amount: number) => {
+  if (amount >= 100) return 100;
+  if (amount >= 20) return 20;
+  return 5;
+};
+
 const getStoredBank = () => {
   if (typeof window === "undefined") return 1000;
   const storedBank = Number(window.localStorage.getItem(BANK_STORAGE_KEY));
   return Number.isFinite(storedBank) && storedBank > 0 ? storedBank : 1000;
 };
 
-const emptyColorBets = () => ({ red: 0, black: 0, green: 0 });
+const emptyColorBets = (): Record<Color, BetStack> => ({
+  red: { amount: 0, chip: DEFAULT_CHIP },
+  black: { amount: 0, chip: DEFAULT_CHIP },
+  green: { amount: 0, chip: DEFAULT_CHIP },
+});
 
 export default function Roulette() {
   const [bank, setBank] = useState(() => getStoredBank());
-  const [chipValue, setChipValue] = useState(5);
-  const [numberBets, setNumberBets] = useState<Record<string, number>>({});
+  const [lastChipValue, setLastChipValue] = useState(DEFAULT_CHIP);
+  const [numberBets, setNumberBets] = useState<Record<string, BetStack>>({});
   const [colorBets, setColorBets] = useState(() => emptyColorBets());
   const [message, setMessage] = useState("");
   const [spinning, setSpinning] = useState(false);
@@ -95,8 +114,21 @@ export default function Roulette() {
   const [lastWinAmount, setLastWinAmount] = useState(0);
   const [draggingNum, setDraggingNum] = useState<string | null>(null);
   const dragStateRef = useRef<
-    | { kind: "number"; num: string; amount: number; handled: boolean }
-    | { kind: "color"; color: Color; amount: number; handled: boolean }
+    | {
+        kind: "number";
+        num: string;
+        amount: number;
+        chip: number;
+        handled: boolean;
+      }
+    | {
+        kind: "color";
+        color: Color;
+        amount: number;
+        chip: number;
+        handled: boolean;
+      }
+    | { kind: "chip"; amount: number; chip: number; handled: boolean }
     | null
   >(null);
 
@@ -107,11 +139,11 @@ export default function Roulette() {
 
   const totalBet = useMemo(() => {
     const numberTotal = Object.values(numberBets).reduce(
-      (sum, amt) => sum + amt,
+      (sum, bet) => sum + bet.amount,
       0,
     );
     const colorTotal = Object.values(colorBets).reduce(
-      (sum, amt) => sum + amt,
+      (sum, bet) => sum + bet.amount,
       0,
     );
     return numberTotal + colorTotal;
@@ -134,22 +166,25 @@ export default function Roulette() {
     return `radial-gradient(circle at center, rgba(12, 12, 12, 0.9) 0 35%, transparent 36%), conic-gradient(${segments})`;
   }, []);
 
-  const placeBet = (updater: () => void) => {
+  const placeBetAmount = (amount: number, updater: () => void) => {
     if (spinning) return;
-    if (chipValue > bank) {
+    if (amount > bank) {
       setMessage("Not enough bankroll to place that chip.");
       return;
     }
     setMessage("");
-    setBank((b) => b - chipValue);
+    setBank((b) => b - amount);
     updater();
   };
 
-  const handleNumberBet = (num: string) => {
-    placeBet(() => {
+  const handleNumberBet = (num: string, amount: number) => {
+    placeBetAmount(amount, () => {
       setNumberBets((prev) => ({
         ...prev,
-        [num]: (prev[num] ?? 0) + chipValue,
+        [num]: {
+          amount: (prev[num]?.amount ?? 0) + amount,
+          chip: amount,
+        },
       }));
     });
   };
@@ -157,14 +192,14 @@ export default function Roulette() {
   const removeNumberBet = (num: string, amount: number) => {
     if (amount <= 0) return;
     setNumberBets((prev) => {
-      const current = prev[num] ?? 0;
+      const current = prev[num]?.amount ?? 0;
       const nextAmount = Math.max(0, current - amount);
       if (nextAmount === 0) {
         const next = { ...prev };
         delete next[num];
         return next;
       }
-      return { ...prev, [num]: nextAmount };
+      return { ...prev, [num]: { amount: nextAmount, chip: prev[num]?.chip ?? DEFAULT_CHIP } };
     });
   };
 
@@ -172,7 +207,10 @@ export default function Roulette() {
     if (amount <= 0) return;
     setColorBets((prev) => ({
       ...prev,
-      [color]: Math.max(0, prev[color] - amount),
+      [color]: {
+        amount: Math.max(0, prev[color].amount - amount),
+        chip: prev[color].chip,
+      },
     }));
   };
 
@@ -181,7 +219,13 @@ export default function Roulette() {
     num: string,
     amount: number,
   ) => {
-    dragStateRef.current = { kind: "number", num, amount, handled: false };
+    dragStateRef.current = {
+      kind: "number",
+      num,
+      amount,
+      chip: numberBets[num]?.chip ?? DEFAULT_CHIP,
+      handled: false,
+    };
     setDraggingNum(num);
     const img = new Image();
     img.src =
@@ -194,7 +238,26 @@ export default function Roulette() {
     color: Color,
     amount: number,
   ) => {
-    dragStateRef.current = { kind: "color", color, amount, handled: false };
+    dragStateRef.current = {
+      kind: "color",
+      color,
+      amount,
+      chip: colorBets[color].chip ?? DEFAULT_CHIP,
+      handled: false,
+    };
+    setDraggingNum(null);
+    const img = new Image();
+    img.src =
+      "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+    event.dataTransfer.setDragImage(img, 0, 0);
+  };
+
+  const handleDragStartChip = (
+    event: React.DragEvent<HTMLButtonElement>,
+    amount: number,
+  ) => {
+    dragStateRef.current = { kind: "chip", amount, chip: amount, handled: false };
+    setLastChipValue(amount);
     const img = new Image();
     img.src =
       "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
@@ -209,7 +272,10 @@ export default function Roulette() {
       if (dragState.num === targetNum) return;
       setNumberBets((prev) => ({
         ...prev,
-        [targetNum]: (prev[targetNum] ?? 0) + dragState.amount,
+        [targetNum]: {
+          amount: (prev[targetNum]?.amount ?? 0) + dragState.amount,
+          chip: dragState.chip,
+        },
       }));
       removeNumberBet(dragState.num, dragState.amount);
       return;
@@ -217,9 +283,29 @@ export default function Roulette() {
     if (dragState.kind === "color") {
       setNumberBets((prev) => ({
         ...prev,
-        [targetNum]: (prev[targetNum] ?? 0) + dragState.amount,
+        [targetNum]: {
+          amount: (prev[targetNum]?.amount ?? 0) + dragState.amount,
+          chip: dragState.chip,
+        },
       }));
       removeColorBet(dragState.color, dragState.amount);
+      return;
+    }
+    if (dragState.kind === "chip") {
+      const amount = dragState.amount;
+      if (amount > bank) {
+        setMessage("Not enough bankroll to place that chip.");
+        return;
+      }
+      setMessage("");
+      setBank((b) => b - amount);
+      setNumberBets((prev) => ({
+        ...prev,
+        [targetNum]: {
+          amount: (prev[targetNum]?.amount ?? 0) + amount,
+          chip: dragState.chip,
+        },
+      }));
     }
   };
 
@@ -231,7 +317,10 @@ export default function Roulette() {
       if (dragState.color === targetColor) return;
       setColorBets((prev) => ({
         ...prev,
-        [targetColor]: prev[targetColor] + dragState.amount,
+        [targetColor]: {
+          amount: prev[targetColor].amount + dragState.amount,
+          chip: dragState.chip,
+        },
       }));
       removeColorBet(dragState.color, dragState.amount);
       return;
@@ -239,9 +328,29 @@ export default function Roulette() {
     if (dragState.kind === "number") {
       setColorBets((prev) => ({
         ...prev,
-        [targetColor]: prev[targetColor] + dragState.amount,
+        [targetColor]: {
+          amount: prev[targetColor].amount + dragState.amount,
+          chip: dragState.chip,
+        },
       }));
       removeNumberBet(dragState.num, dragState.amount);
+      return;
+    }
+    if (dragState.kind === "chip") {
+      const amount = dragState.amount;
+      if (amount > bank) {
+        setMessage("Not enough bankroll to place that chip.");
+        return;
+      }
+      setMessage("");
+      setBank((b) => b - amount);
+      setColorBets((prev) => ({
+        ...prev,
+        [targetColor]: {
+          amount: prev[targetColor].amount + amount,
+          chip: dragState.chip,
+        },
+      }));
     }
   };
 
@@ -251,7 +360,7 @@ export default function Roulette() {
     if (!dragState.handled) {
       if (dragState.kind === "number") {
         removeNumberBet(dragState.num, dragState.amount);
-      } else {
+      } else if (dragState.kind === "color") {
         removeColorBet(dragState.color, dragState.amount);
       }
     }
@@ -259,9 +368,15 @@ export default function Roulette() {
     dragStateRef.current = null;
   };
 
-  const handleColorBet = (color: Color) => {
-    placeBet(() => {
-      setColorBets((prev) => ({ ...prev, [color]: prev[color] + chipValue }));
+  const handleColorBet = (color: Color, amount: number) => {
+    placeBetAmount(amount, () => {
+      setColorBets((prev) => ({
+        ...prev,
+        [color]: {
+          amount: prev[color].amount + amount,
+          chip: amount,
+        },
+      }));
     });
   };
 
@@ -272,8 +387,8 @@ export default function Roulette() {
 
   const settleBets = (result: string) => {
     const resultColor = getNumberColor(result);
-    const numberBet = numberBets[result] ?? 0;
-    const colorBet = colorBets[resultColor] ?? 0;
+    const numberBet = numberBets[result]?.amount ?? 0;
+    const colorBet = colorBets[resultColor]?.amount ?? 0;
 
     let payout = 0;
     let profit = 0;
@@ -283,9 +398,9 @@ export default function Roulette() {
       profit += numberBet * 35;
     }
 
-    if (resultColor === "green" && colorBets.green > 0) {
-      payout += colorBets.green * 36;
-      profit += colorBets.green * 35;
+    if (resultColor === "green" && colorBets.green.amount > 0) {
+      payout += colorBets.green.amount * 36;
+      profit += colorBets.green.amount * 35;
     } else if (
       (resultColor === "red" || resultColor === "black") &&
       colorBet > 0
@@ -428,19 +543,29 @@ export default function Roulette() {
 
           <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
             <p className="text-xs uppercase tracking-[0.3em] text-white/60">
-              Chip Value
+              Drag Chips
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-3">
-              {[5, 20, 100].map((value) => (
-                <button
-                  key={value}
-                  className={`chip-btn ${value === chipValue ? "bg-gold text-emeraldDeep" : "bg-white text-ink chip-btn-white"}`}
-                  onClick={() => setChipValue(value)}
-                  disabled={spinning}
-                >
-                  ${value}
-                </button>
-              ))}
+              {[5, 20, 100].map((value) => {
+                const chipClass =
+                  value === 5
+                    ? "bg-white text-ink chip-btn-white"
+                    : value === 20
+                      ? "bg-chipRed text-white"
+                      : "bg-chipBlue text-white";
+                return (
+                  <button
+                    key={value}
+                    className={`chip-btn ${chipClass}`}
+                    draggable={!spinning}
+                    onDragStart={(event) => handleDragStartChip(event, value)}
+                    onClick={() => setLastChipValue(value)}
+                    disabled={spinning}
+                  >
+                    ${value}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -451,7 +576,7 @@ export default function Roulette() {
               <button
                 className="btn rounded-xl text-white focus-visible:outline-gold/60 flex-1"
                 style={{ background: "rgba(178, 34, 34, 0.85)" }}
-                onClick={() => handleColorBet("red")}
+                onClick={() => handleColorBet("red", lastChipValue)}
                 disabled={spinning}
                 onDragOver={(event) => event.preventDefault()}
                 onDrop={() => handleDropOnColor("red")}
@@ -460,23 +585,23 @@ export default function Roulette() {
                   <span>Bet Red</span>
                   <span
                     className="roulette-stack"
-                    draggable={colorBets.red > 0 && !spinning}
+                    draggable={colorBets.red.amount > 0 && !spinning}
                     onDragStart={(event) =>
-                      handleDragStartColor(event, "red", colorBets.red)
+                      handleDragStartColor(event, "red", colorBets.red.amount)
                     }
                     onDragEnd={handleDragEnd}
                   >
-                    {colorBets.red > 0 ? (
-                      <span className="roulette-coin">${colorBets.red}</span>
-                    ) : (
-                      <span className="w-[36px] h-[36px] opacity-60"></span>
+                    {colorBets.red.amount > 0 && (
+                      <span className={getChipClass(colorBets.red.chip)}>
+                        ${colorBets.red.amount}
+                      </span>
                     )}
                   </span>
                 </span>
               </button>
               <button
                 className="btn btn-outline rounded-xl bg-black/85 flex-1"
-                onClick={() => handleColorBet("black")}
+                onClick={() => handleColorBet("black", lastChipValue)}
                 disabled={spinning}
                 onDragOver={(event) => event.preventDefault()}
                 onDrop={() => handleDropOnColor("black")}
@@ -485,16 +610,16 @@ export default function Roulette() {
                   <span>Bet Black</span>
                   <span
                     className="roulette-stack"
-                    draggable={colorBets.black > 0 && !spinning}
+                    draggable={colorBets.black.amount > 0 && !spinning}
                     onDragStart={(event) =>
-                      handleDragStartColor(event, "black", colorBets.black)
+                      handleDragStartColor(event, "black", colorBets.black.amount)
                     }
                     onDragEnd={handleDragEnd}
                   >
-                    {colorBets.black > 0 ? (
-                      <span className="roulette-coin">${colorBets.black}</span>
-                    ) : (
-                      <span className="w-[36px] h-[36px] opacity-60"></span>
+                    {colorBets.black.amount > 0 && (
+                      <span className={getChipClass(colorBets.black.chip)}>
+                        ${colorBets.black.amount}
+                      </span>
                     )}
                   </span>
                 </span>
@@ -506,14 +631,16 @@ export default function Roulette() {
               .filter((num) => num !== "00")
               .map((num) => {
                 const color = getNumberColor(num);
-                const betAmount = numberBets[num] ?? 0;
+                const betAmount = numberBets[num]?.amount ?? 0;
+                const betChip = getChipForAmount(betAmount);
                 const isWinner = winningNumber === num;
+                
 
                 return (
                   <button
                     key={num}
                     className={`roulette-number ${color} ${isWinner ? "winner" : ""}`}
-                    onClick={() => handleNumberBet(num)}
+                    onClick={() => handleNumberBet(num, lastChipValue)}
                     disabled={spinning}
                     onDragOver={(event) => event.preventDefault()}
                     onDrop={() => handleDropOnNumber(num)}
@@ -528,13 +655,11 @@ export default function Roulette() {
                       }
                       onDragEnd={handleDragEnd}
                     >
-                      {betAmount > 0 ? (
-                        <span key={`coin-${num}`} className="roulette-coin">
-                          ${betAmount}
-                        </span>
-                      ) : (
-                        <span className=" opacity-60"></span>
-                      )}
+                    {betAmount > 0 && (
+                      <span key={`coin-${num}`} className={getChipClass(betChip)}>
+                        ${betAmount}
+                      </span>
+                    )}
                     </span>
                   </button>
                 );
@@ -543,7 +668,7 @@ export default function Roulette() {
           <button
             key={"00"}
             className={`mx-auto w-[40%] roulette-number ${getNumberColor("00")} ${winningNumber === "00" ? "winner" : ""}`}
-            onClick={() => handleNumberBet("00")}
+            onClick={() => handleNumberBet("00", lastChipValue)}
             disabled={spinning}
             onDragOver={(event) => event.preventDefault()}
             onDrop={() => handleDropOnNumber("00")}
@@ -551,19 +676,20 @@ export default function Roulette() {
             <span>{"00"}</span>
             <span
               className={`roulette-stack ${draggingNum === "00" ? "opacity-0" : ""}`}
-              aria-label={`$${numberBets["00"]} bet`}
-              draggable={numberBets["00"] > 0 && !spinning}
+              aria-label={`$${numberBets["00"]?.amount ?? 0} bet`}
+              draggable={(numberBets["00"]?.amount ?? 0) > 0 && !spinning}
               onDragStart={(event) =>
-                handleDragStartNumber(event, "00", numberBets["00"])
+                handleDragStartNumber(event, "00", numberBets["00"]?.amount ?? 0)
               }
               onDragEnd={handleDragEnd}
             >
-              {numberBets["00"] > 0 ? (
-                <span key={`coin-${"00"}-${0}`} className="roulette-coin">
-                  ${numberBets["00"]}
+              {(numberBets["00"]?.amount ?? 0) > 0 && (
+                <span
+                  key="coin-00"
+                  className={getChipClass(getChipForAmount(numberBets["00"]?.amount ?? 0))}
+                >
+                  ${numberBets["00"]?.amount ?? 0}
                 </span>
-              ) : (
-                <span className=" opacity-60"></span>
               )}
             </span>
           </button>
