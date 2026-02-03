@@ -162,7 +162,7 @@ export default function Roulette() {
       const end = (idx + 1) * slotAngle;
       return `${fill} ${start}deg ${end}deg`;
     }).join(", ");
-    return `radial-gradient(circle at center, rgba(12, 12, 12, 0.9) 0 35%, transparent 36%), conic-gradient(${segments})`;
+    return `radial-gradient(circle at center, rgba(12, 12, 12, 0.9) 0 28%, transparent 29%), conic-gradient(${segments})`;
   }, []);
 
   const placeBetAmount = (amount: number, updater: () => void) => {
@@ -486,7 +486,7 @@ export default function Roulette() {
                   key={`wheel-${num}-${idx}`}
                   className={`roulette-wheel__number ${getNumberColor(num)}`}
                   style={{
-                    transform: `rotate(${idx * (360 / ROULETTE_ORDER.length)}deg)`,
+                    transform: `rotate(${(idx + 0.5) * (360 / ROULETTE_ORDER.length)}deg)`,
                   }}
                 >
                   <span className="roulette-wheel__number-text">{num}</span>
