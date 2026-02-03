@@ -1,4 +1,5 @@
 /* Tailwind v4 entry */
+/* @ts-ignore */
 @import "tailwindcss";
 
 /* v4-native tokens: colors, shadows, radii, fonts, etc. */
@@ -33,6 +34,7 @@
 }
 
 /* Base styles */
+/* @ts-ignore */
 @layer base {
   :root {
     font-family: var(--font-sans);
