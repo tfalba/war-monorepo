@@ -312,9 +312,10 @@
   border-radius: 50%;
   background: #f7f7f7;
   box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-  top: 16px;
+  top: 40px;
   left: 50%;
   transition: top 0.9s ease;
+  transform:translateX(-50%);
 }
 
 .roulette-ball.is-bouncing {

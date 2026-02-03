@@ -68,9 +68,6 @@ const RED_NUMBERS = new Set([
 ]);
 
 const getNumberColor = (num: string): Color => {
-  if (num === "00") console.log(num, "green");
-  if (RED_NUMBERS.has(num)) console.log(num, "red");
-  if (!RED_NUMBERS.has(num) && num !== "00") console.log(num, "black");
   if (num === "00") return "green";
   return RED_NUMBERS.has(num) ? "red" : "black";
 };
@@ -413,14 +410,13 @@ export default function Roulette() {
     setWinningNumber(null);
     setBallSettled(false);
     setLastWinAmount(0);
-    const result = Math.floor(Math.random() * 37);
-    const index = ROULETTE_ORDER.indexOf(result.toLocaleString());
+    const index = Math.floor(Math.random() * ROULETTE_ORDER.length);
     const slotAngle = 360 / ROULETTE_ORDER.length;
     const spins = 4 * 360;
-    const finalRotation = spins + index * slotAngle;
-    setWheelRotation((prev) => prev + finalRotation);
-    setBallRotation((prev) => prev - finalRotation);
-    const resultStr = ROULETTE_ORDER[result];
+    const centerAngle = (index + 0.5) * slotAngle;
+    setWheelRotation(spins + wheelRotation);
+    setBallRotation(-spins + centerAngle);
+    const resultStr = ROULETTE_ORDER[index];
 
     window.setTimeout(() => {
       setWinningNumber(resultStr);
@@ -433,10 +429,8 @@ export default function Roulette() {
   const numberButtons = Array.from({ length: 37 }, (_, i) => i);
   const numberStrs = numberButtons.map((n) => {
     if (n < 10) {
-      console.log(`0${n}`);
       return `0${n}`;
     } else {
-      console.log(n.toString());
       return n.toLocaleString();
     }
   });
