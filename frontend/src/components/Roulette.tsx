@@ -5,13 +5,65 @@ type Color = "red" | "black" | "green";
 const BANK_STORAGE_KEY = "bj_bank";
 const SPIN_DURATION_MS = 2200;
 
-const ROULETTE_ORDER:string[] = [
-  "00", "32", "15", "19", "04", "21", "02", "25", "17", "34", "06", "27", "13", "28", "11", "30", "08", "23", "10", "05", "24",
-  "16", "33", "01", "20", "14", "31", "09", "22", "18", "29", "07", "36", "12", "35", "03", "26",
+const ROULETTE_ORDER: string[] = [
+  "00",
+  "32",
+  "15",
+  "19",
+  "04",
+  "21",
+  "02",
+  "25",
+  "17",
+  "34",
+  "06",
+  "27",
+  "13",
+  "28",
+  "11",
+  "30",
+  "08",
+  "23",
+  "10",
+  "05",
+  "24",
+  "16",
+  "33",
+  "01",
+  "20",
+  "14",
+  "31",
+  "09",
+  "22",
+  "18",
+  "29",
+  "07",
+  "36",
+  "12",
+  "35",
+  "03",
+  "26",
 ];
 
 const RED_NUMBERS = new Set([
-  "01", "03", "05", "07", "09", "12", "14", "16", "18", "19", "21", "23", "25", "27", "28", "30", "32", "34",
+  "01",
+  "03",
+  "05",
+  "07",
+  "09",
+  "12",
+  "14",
+  "16",
+  "18",
+  "19",
+  "21",
+  "23",
+  "25",
+  "27",
+  "28",
+  "30",
+  "32",
+  "34",
 ]);
 
 const getNumberColor = (num: string): Color => {
@@ -127,7 +179,7 @@ export default function Roulette() {
   const handleDragStartNumber = (
     event: React.DragEvent<HTMLSpanElement>,
     num: string,
-    amount: number
+    amount: number,
   ) => {
     dragStateRef.current = { kind: "number", num, amount, handled: false };
     setDraggingNum(num);
@@ -140,7 +192,7 @@ export default function Roulette() {
   const handleDragStartColor = (
     event: React.DragEvent<HTMLSpanElement>,
     color: Color,
-    amount: number
+    amount: number,
   ) => {
     dragStateRef.current = { kind: "color", color, amount, handled: false };
     const img = new Image();
@@ -317,7 +369,7 @@ export default function Roulette() {
       </header>
 
       <div className="grid gap-8 lg:grid-cols-[1.3fr_1fr]">
-        <div className="flex flex-col gap-6 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-soft">
+        <div className="flex flex-col gap-4">
           <div className="roulette-wheel-wrap">
             <div
               className={`roulette-wheel ${spinning ? "is-spinning" : ""}`}
@@ -331,7 +383,9 @@ export default function Roulette() {
                 <span
                   key={`wheel-${num}-${idx}`}
                   className={`roulette-wheel__number ${getNumberColor(num)}`}
-                  style={{ transform: `rotate(${idx * (360 / ROULETTE_ORDER.length)}deg)` }}
+                  style={{
+                    transform: `rotate(${idx * (360 / ROULETTE_ORDER.length)}deg)`,
+                  }}
                 >
                   <span className="roulette-wheel__number-text">{num}</span>
                 </span>
@@ -344,7 +398,9 @@ export default function Roulette() {
               className={`roulette-ball-orbit ${spinning ? "is-spinning" : ""}`}
               style={{ transform: `rotate(${ballRotation}deg)` }}
             >
-              <div className={`roulette-ball ${spinning ? "is-bouncing" : ""}`} />
+              <div
+                className={`roulette-ball ${spinning ? "is-bouncing" : ""}`}
+              />
             </div>
           </div>
 
@@ -389,12 +445,12 @@ export default function Roulette() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-soft">
           <div className="rounded-3xl border border-white/10 bg-black/40 p-6 shadow-soft">
             <div className="flex flex-wrap items-center gap-3">
               <button
-                className="btn text-white focus-visible:outline-gold/60"
-                style={{ background: "rgba(178, 34, 34, 0.75)" }}
+                className="btn rounded-xl text-white focus-visible:outline-gold/60 flex-1"
+                style={{ background: "rgba(178, 34, 34, 0.85)" }}
                 onClick={() => handleColorBet("red")}
                 disabled={spinning}
                 onDragOver={(event) => event.preventDefault()}
@@ -419,7 +475,7 @@ export default function Roulette() {
                 </span>
               </button>
               <button
-                className="btn btn-outline"
+                className="btn btn-outline rounded-xl bg-black/85 flex-1"
                 onClick={() => handleColorBet("black")}
                 disabled={spinning}
                 onDragOver={(event) => event.preventDefault()}
@@ -444,80 +500,76 @@ export default function Roulette() {
                 </span>
               </button>
             </div>
-            <p className="mt-3 text-xs text-white/60">
-              Green pays 35:1 when 0 hits. Red/Black pay 1:1.
-            </p>
           </div>
-<button
-                  key={"00"}
-                  className={`mx-auto w-[40%] roulette-number ${getNumberColor("00")} ${winningNumber === "00" ? "winner" : ""}`}
-                  onClick={() => handleNumberBet("00")}
-                  disabled={spinning}
-                  onDragOver={(event) => event.preventDefault()}
-                  onDrop={() => handleDropOnNumber("00")}
-                >
-                  <span>{"00"}</span>
-                  <span
-                    className={`roulette-stack ${draggingNum === "00" ? "opacity-0" : ""}`}
-                    aria-label={`$${numberBets["00"]} bet`}
-                    draggable={numberBets["00"] > 0 && !spinning}
-                    onDragStart={(event) =>
-                      handleDragStartNumber(event, "00", numberBets["00"])
-                    }
-                    onDragEnd={handleDragEnd}
-                  >
-                    {numberBets["00"] > 0 ? (
-                      <span
-                        key={`coin-${"00"}-${0}`}
-                        className="roulette-coin"
-                      >
-                        ${numberBets["00"]}
-                      </span>
-                    ) : (
-                      <span className=" opacity-60"></span>
-                    )}
-                  </span>
-                </button>
           <div className="roulette-board">
-            {numberStrs.filter((num) => num !== "00").map((num) => {
-              const color = getNumberColor(num);
-              const betAmount = numberBets[num] ?? 0;
-              const isWinner = winningNumber === num;
-             
-              return (
-                <button
-                  key={num}
-                  className={`roulette-number ${color} ${isWinner ? "winner" : ""}`}
-                  onClick={() => handleNumberBet(num)}
-                  disabled={spinning}
-                  onDragOver={(event) => event.preventDefault()}
-                  onDrop={() => handleDropOnNumber(num)}
-                >
-                  <span>{num}</span>
-                  <span
-                    className={`roulette-stack ${draggingNum === num ? "opacity-0" : ""}`}
-                    aria-label={`$${betAmount} bet`}
-                    draggable={betAmount > 0 && !spinning}
-                    onDragStart={(event) =>
-                      handleDragStartNumber(event, num, betAmount)
-                    }
-                    onDragEnd={handleDragEnd}
+            {numberStrs
+              .filter((num) => num !== "00")
+              .map((num) => {
+                const color = getNumberColor(num);
+                const betAmount = numberBets[num] ?? 0;
+                const isWinner = winningNumber === num;
+
+                return (
+                  <button
+                    key={num}
+                    className={`roulette-number ${color} ${isWinner ? "winner" : ""}`}
+                    onClick={() => handleNumberBet(num)}
+                    disabled={spinning}
+                    onDragOver={(event) => event.preventDefault()}
+                    onDrop={() => handleDropOnNumber(num)}
                   >
-                    {betAmount > 0 ? (
-                        <span
-                          key={`coin-${num}`}
-                          className="roulette-coin"
-                        >
+                    <span>{num}</span>
+                    <span
+                      className={`roulette-stack ${draggingNum === num ? "opacity-0" : ""}`}
+                      aria-label={`$${betAmount} bet`}
+                      draggable={betAmount > 0 && !spinning}
+                      onDragStart={(event) =>
+                        handleDragStartNumber(event, num, betAmount)
+                      }
+                      onDragEnd={handleDragEnd}
+                    >
+                      {betAmount > 0 ? (
+                        <span key={`coin-${num}`} className="roulette-coin">
                           ${betAmount}
                         </span>
-                    ) : (
-                      <span className=" opacity-60"></span>
-                    )}
-                  </span>
-                </button>
-              );
-            })}
+                      ) : (
+                        <span className=" opacity-60"></span>
+                      )}
+                    </span>
+                  </button>
+                );
+              })}
           </div>
+          <button
+            key={"00"}
+            className={`mx-auto w-[40%] roulette-number ${getNumberColor("00")} ${winningNumber === "00" ? "winner" : ""}`}
+            onClick={() => handleNumberBet("00")}
+            disabled={spinning}
+            onDragOver={(event) => event.preventDefault()}
+            onDrop={() => handleDropOnNumber("00")}
+          >
+            <span>{"00"}</span>
+            <span
+              className={`roulette-stack ${draggingNum === "00" ? "opacity-0" : ""}`}
+              aria-label={`$${numberBets["00"]} bet`}
+              draggable={numberBets["00"] > 0 && !spinning}
+              onDragStart={(event) =>
+                handleDragStartNumber(event, "00", numberBets["00"])
+              }
+              onDragEnd={handleDragEnd}
+            >
+              {numberBets["00"] > 0 ? (
+                <span key={`coin-${"00"}-${0}`} className="roulette-coin">
+                  ${numberBets["00"]}
+                </span>
+              ) : (
+                <span className=" opacity-60"></span>
+              )}
+            </span>
+          </button>
+          <p className="mt-3 text-xs text-white/60">
+            Green pays 35:1 when 00 hits. Red/Black pay 1:1.
+          </p>
         </div>
       </div>
     </section>

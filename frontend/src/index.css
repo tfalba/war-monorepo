@@ -328,7 +328,6 @@
 
 .roulette-number {
   border-radius: 14px;
-  padding: 10px 8px;
   font-size: 0.95rem;
   font-weight: 600;
   display: flex;
@@ -337,7 +336,7 @@
   padding: 0 1rem;
   gap: 4px;
   color: #f8f8f8;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  /* border: 1px solid rgba(255, 255, 255, 0.15); */
   background: rgba(0, 0, 0, 0.5);
   text-align: center;
   height: 46px;
@@ -350,7 +349,7 @@
 }
 
 .roulette-number.red {
-  background: rgba(178, 34, 34, 0.75);
+  background: rgba(178, 34, 34, 0.85);
 }
 
 .roulette-number.black {
@@ -358,7 +357,7 @@
 }
 
 .roulette-number.green {
-  background: rgba(0, 120, 70, 0.85);
+  background: rgba(0, 120, 70, 0.95);
 }
 
 .roulette-stack {

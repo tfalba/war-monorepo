@@ -531,14 +531,14 @@ function BattleArena({
           )
         )}
       </div>
-      <div className="w-full rounded-2xl border border-gold/20 bg-black/20 px-4 py-3">
-        <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-white/60">
+      <div className="w-full rounded-2xl border border-gold/20 bg-black/80 px-4 py-3">
+        <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-white/70">
           <span>Bankroll</span>
           <span className="text-base font-semibold text-white">
             ${bank.toFixed(0)}
           </span>
         </div>
-        <div className="mt-2 grid gap-2 text-xs uppercase tracking-[0.28em] text-white/50 sm:grid-cols-2">
+        <div className="mt-2 grid gap-2 text-xs uppercase tracking-[0.28em] text-white/70 sm:grid-cols-2 text-left">
           <span>Current Bet</span>
           <span className="text-right text-sm font-semibold text-white/90">
             ${bet.toFixed(0)}
@@ -556,22 +556,16 @@ function BattleArena({
           <label className="flex flex-1 items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/60">
             Bet
             <input
+              id="war-bet-input"
               type="number"
-              min={1}
+              min={MIN_BET}
               step={1}
               value={Number.isFinite(bet) ? bet : 0}
               onChange={(e) => onBetChange(Number(e.target.value))}
               disabled={!canAdjustBet}
-              className="w-full rounded-xl border border-white/10 bg-black/40 px-3 py-2 text-sm text-white outline-none focus:border-gold/50"
+              className="w-full rounded-xl border border-white/10 bg-white/20 px-3 py-2 text-sm text-white outline-none focus:border-gold/50"
             />
           </label>
-          <button
-            className="btn btn-outline"
-            onClick={onClearBet}
-            disabled={!canAdjustBet}
-          >
-            Clear Bet
-          </button>
         </div>
         <div className="mt-3 flex flex-wrap items-center justify-center gap-3">
           <button
@@ -596,6 +590,13 @@ function BattleArena({
             +$100
           </button>
         </div>
+          <button
+            className="btn btn-outline mt-4"
+            onClick={onClearBet}
+            disabled={!canAdjustBet}
+          >
+            Clear Bet
+          </button>
         {betMessage && (
           <p className="mt-3 text-xs text-gold/80">{betMessage}</p>
         )}
