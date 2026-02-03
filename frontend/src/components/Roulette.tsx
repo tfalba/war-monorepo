@@ -470,7 +470,7 @@ export default function Roulette() {
         </div>
       </header>
 
-      <div className="grid gap-8 lg:grid-cols-[1.3fr_1fr]">
+      <div className="grid gap-8 lg:grid-cols-[1.3fr_1fr] pb-6">
         <div className="flex flex-col gap-4">
           <div className="roulette-wheel-wrap">
             <div
@@ -506,7 +506,7 @@ export default function Roulette() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-gold/20 bg-black/30 px-4 py-3">
+          <div className="rounded-2xl border border-gold/20 bg-black/80 px-4 py-4 shadow-soft mx-auto min-w-[50%] w-[320px]">
             <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-white/60">
               <span>Bankroll</span>
               <span className="text-base font-semibold text-white">
@@ -526,33 +526,32 @@ export default function Roulette() {
               </span>
             </div>
             {message && <p className="mt-3 text-xs text-gold/80">{message}</p>}
-          </div>
-
-          <div className="rounded-2xl border border-white/10 bg-black/40 p-4">
-            <p className="text-xs uppercase tracking-[0.3em] text-white/60">
-              Drag Chips
-            </p>
-            <div className="mt-3 flex flex-wrap items-center gap-3">
-              {[5, 20, 100].map((value) => {
-                const chipClass =
-                  value === 5
-                    ? "bg-white text-ink chip-btn-white"
-                    : value === 20
-                      ? "bg-chipRed text-white"
-                      : "bg-chipBlue text-white";
-                return (
-                  <button
-                    key={value}
-                    className={`chip-btn ${chipClass}`}
-                    draggable={!spinning}
-                    onDragStart={(event) => handleDragStartChip(event, value)}
-                    onClick={() => setLastChipValue(value)}
-                    disabled={spinning}
-                  >
-                    ${value}
-                  </button>
-                );
-              })}
+            <div className="mt-4">
+              <p className="text-xs uppercase tracking-[0.3em] text-white/60">
+                Drag Chips
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-3">
+                {[5, 20, 100].map((value) => {
+                  const chipClass =
+                    value === 5
+                      ? "bg-white text-ink chip-btn-white"
+                      : value === 20
+                        ? "bg-chipRed text-white"
+                        : "bg-chipBlue text-white";
+                  return (
+                    <button
+                      key={value}
+                      className={`chip-btn ${chipClass}`}
+                      draggable={!spinning}
+                      onDragStart={(event) => handleDragStartChip(event, value)}
+                      onClick={() => setLastChipValue(value)}
+                      disabled={spinning}
+                    >
+                      ${value}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
