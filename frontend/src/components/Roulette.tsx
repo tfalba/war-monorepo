@@ -112,7 +112,6 @@ export default function Roulette() {
   const [wheelRotation, setWheelRotation] = useState(0);
   const [ballRotation, setBallRotation] = useState(0);
   const [lastWinAmount, setLastWinAmount] = useState(0);
-  const [draggingNum, setDraggingNum] = useState<string | null>(null);
   const dragStateRef = useRef<
     | {
         kind: "number";
@@ -226,11 +225,7 @@ export default function Roulette() {
       chip: numberBets[num]?.chip ?? DEFAULT_CHIP,
       handled: false,
     };
-    setDraggingNum(num);
-    const img = new Image();
-    img.src =
-      "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
-    event.dataTransfer.setDragImage(img, 0, 0);
+    event.dataTransfer.setDragImage(event.currentTarget, 12, 12);
   };
 
   const handleDragStartColor = (
@@ -245,11 +240,7 @@ export default function Roulette() {
       chip: colorBets[color].chip ?? DEFAULT_CHIP,
       handled: false,
     };
-    setDraggingNum(null);
-    const img = new Image();
-    img.src =
-      "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
-    event.dataTransfer.setDragImage(img, 0, 0);
+    event.dataTransfer.setDragImage(event.currentTarget, 12, 12);
   };
 
   const handleDragStartChip = (
@@ -258,10 +249,7 @@ export default function Roulette() {
   ) => {
     dragStateRef.current = { kind: "chip", amount, chip: amount, handled: false };
     setLastChipValue(amount);
-    const img = new Image();
-    img.src =
-      "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
-    event.dataTransfer.setDragImage(img, 0, 0);
+    event.dataTransfer.setDragImage(event.currentTarget, 12, 12);
   };
 
   const handleDropOnNumber = (targetNum: string) => {
@@ -364,7 +352,6 @@ export default function Roulette() {
         removeColorBet(dragState.color, dragState.amount);
       }
     }
-    setDraggingNum(null);
     dragStateRef.current = null;
   };
 
@@ -570,8 +557,8 @@ export default function Roulette() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-soft">
-          <div className="rounded-3xl border border-white/10 bg-black/40 p-6 shadow-soft">
+        <div className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-white/5 pt-2 pb-4 px-4 shadow-soft">
+          <div className="rounded-3xl border border-white/10 bg-black/40 p-4 shadow-soft">
             <div className="flex flex-wrap items-center gap-3">
               <button
                 className="btn rounded-xl text-white focus-visible:outline-gold/60 flex-1"
@@ -647,7 +634,7 @@ export default function Roulette() {
                   >
                     <span>{num}</span>
                     <span
-                      className={`roulette-stack ${draggingNum === num ? "opacity-0" : ""}`}
+                      className="roulette-stack"
                       aria-label={`$${betAmount} bet`}
                       draggable={betAmount > 0 && !spinning}
                       onDragStart={(event) =>
@@ -675,7 +662,7 @@ export default function Roulette() {
           >
             <span>{"00"}</span>
             <span
-              className={`roulette-stack ${draggingNum === "00" ? "opacity-0" : ""}`}
+              className="roulette-stack"
               aria-label={`$${numberBets["00"]?.amount ?? 0} bet`}
               draggable={(numberBets["00"]?.amount ?? 0) > 0 && !spinning}
               onDragStart={(event) =>
