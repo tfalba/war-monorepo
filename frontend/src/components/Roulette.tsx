@@ -111,6 +111,7 @@ export default function Roulette() {
   const [winningNumber, setWinningNumber] = useState<string | null>(null);
   const [wheelRotation, setWheelRotation] = useState(0);
   const [ballRotation, setBallRotation] = useState(0);
+  const [ballSettled, setBallSettled] = useState(false);
   const [lastWinAmount, setLastWinAmount] = useState(0);
   const dragStateRef = useRef<
     | {
@@ -410,6 +411,7 @@ export default function Roulette() {
     setMessage("Spinning...");
     setSpinning(true);
     setWinningNumber(null);
+    setBallSettled(false);
     setLastWinAmount(0);
     const result = Math.floor(Math.random() * 37);
     const index = ROULETTE_ORDER.indexOf(result.toLocaleString());
@@ -422,6 +424,7 @@ export default function Roulette() {
 
     window.setTimeout(() => {
       setWinningNumber(resultStr);
+      setBallSettled(true);
       setSpinning(false);
       settleBets(resultStr);
     }, SPIN_DURATION_MS);
@@ -501,7 +504,9 @@ export default function Roulette() {
               style={{ transform: `rotate(${ballRotation}deg)` }}
             >
               <div
-                className={`roulette-ball ${spinning ? "is-bouncing" : ""}`}
+                className={`roulette-ball ${spinning ? "is-bouncing" : ""} ${
+                  ballSettled ? "is-settled" : ""
+                }`}
               />
             </div>
           </div>

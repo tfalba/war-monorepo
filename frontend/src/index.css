@@ -314,10 +314,15 @@
   box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
   top: 16px;
   left: 50%;
+  transition: top 0.9s ease;
 }
 
 .roulette-ball.is-bouncing {
   animation: roulette-ball-bounce 0.35s ease-in-out infinite alternate;
+}
+
+.roulette-ball.is-settled {
+  top: 195px;
 }
 
 @keyframes roulette-ball-bounce {
