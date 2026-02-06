@@ -349,7 +349,7 @@
 .roulette-board {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
+  gap: 14px;
 }
 
 .roulette-number {
@@ -359,10 +359,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 1rem;
+  padding: 1rem;
   gap: 4px;
   color: #f8f8f8;
-  /* border: 1px solid rgba(255, 255, 255, 0.15); */
+  border: 1px solid rgba(255, 255, 255, 0.15);
   background: rgba(0, 0, 0, 0.5);
   text-align: center;
   height: 46px;

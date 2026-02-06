@@ -624,7 +624,7 @@ export default function Roulette() {
                 return (
                   <button
                     key={num}
-                    className={`roulette-number ${color} ${isWinner ? "winner" : ""}`}
+                    className={`roulette-number shadow-lg shadow-white/20 ${color} ${isWinner ? "winner" : ""}`}
                     onClick={() => handleNumberBet(num, lastChipValue)}
                     disabled={spinning}
                     onDragOver={(event) => event.preventDefault()}

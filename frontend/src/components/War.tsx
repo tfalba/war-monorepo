@@ -244,7 +244,7 @@ export default function War() {
         </div>
       </header>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_minmax(290px,0.8fr)_1fr]">
+      <div className="grid gap-6 lg:grid-cols-[1fr_minmax(320px,0.8fr)_1fr]">
         <DisplayPlayerDeck
           player="A"
           cardA={cardA}
@@ -368,7 +368,7 @@ function DisplayPlayerDeck({
     );
 
   return (
-    <section className="z-20 flex flex-col gap-5 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-soft">
+    <section className="flex flex-col gap-5 rounded-3xl border border-white/10 bg-white/5 p-6 shadow-soft">
       <div className="flex items-center justify-between">
         <div>
           <p className=" uppercase tracking-[0.2em] text-paper/90 font-light">
@@ -445,7 +445,7 @@ function BattleArena({
 }) {
   const hasBattle = Boolean(showBattle && cardA && cardB);
   const baseContainer =
-    "sticky top-0 flex flex-col items-center gap-5 rounded-3xl border p-6 text-center shadow-soft relative overflow-hidden transition-colors duration-500";
+    "flex flex-col items-center gap-5 rounded-3xl border p-6 text-center shadow-soft relative overflow-hidden transition-colors duration-500";
   const containerClass = hasBattle
     ? `${baseContainer} border-gold/40 ${
         battleEntering ? "bg-black/20" : "bg-black/40"
@@ -501,7 +501,7 @@ function BattleArena({
           </p>
         )}
       </div>
-      <div className="flex w-full flex-col gap-3">
+      <div className="flex w-full flex-col gap-3 max-w-[400px]">
         {hasBattle ? (
           <>
             {!battleRevealed && (
@@ -531,14 +531,14 @@ function BattleArena({
           )
         )}
       </div>
-      <div className="w-full rounded-2xl border border-gold/20 bg-black/80 px-4 py-3">
+      <div className="w-full max-w-[400px] rounded-2xl border border-gold/20 bg-black/80 px-4 py-3">
         <div className="flex items-center justify-between text-xs uppercase tracking-[0.3em] text-white/70">
           <span>Bankroll</span>
           <span className="text-base font-semibold text-white">
             ${bank.toFixed(0)}
           </span>
         </div>
-        <div className="mt-2 grid gap-2 text-xs uppercase tracking-[0.28em] text-white/70 sm:grid-cols-2 text-left">
+        <div className="mt-2 grid gap-2 text-xs uppercase tracking-[0.28em] text-white/70 sm:grid-cols-[2fr_1fr] text-left">
           <span>Current Bet</span>
           <span className="text-right text-sm font-semibold text-white/90">
             ${bet.toFixed(0)}

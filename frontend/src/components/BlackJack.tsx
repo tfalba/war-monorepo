@@ -849,7 +849,7 @@ export default function BlackJack() {
       </header>
 
       <div className="grid grid-cols-1 gap-8 lg:flex-1 lg:min-h-0 lg:grid-cols-[1fr_2fr] lg:items-start">
-        <div className="sticky top-0 flex flex-col gap-2 min-h-[40rem] h-full rounded-3xl border border-white/10 bg-white/5 p-4 shadow-soft order-1 lg:order-2 lg:max-h-full lg:overflow-y-auto">
+        <div className="flex flex-col gap-2 min-h-[40rem] h-full rounded-3xl border border-white/10 bg-white/5 p-4 shadow-soft order-1 lg:order-2 lg:max-h-full lg:overflow-y-auto">
           <div className="flex flex-[.8] flex-col space-y-4 items-start ml-4">
             <Hand
               label="Dealer"
@@ -988,7 +988,7 @@ export default function BlackJack() {
           </div>
         </div>
 
-        <div className="z-20 lg:hidden order-3 lg:order-2">
+        <div className="lg:hidden order-3 lg:order-2">
           <ChipControls
             bank={bank}
             bet={bet}
@@ -999,7 +999,7 @@ export default function BlackJack() {
           />
         </div>
 
-        <div className="bg-emeeraldDeep/100 z-20 space-y-6 flex flex-col h-full justify-evenly order-4 lg:order-1 lg:max-h-full lg:overflow-y-auto">
+        <div className="bg-emeeraldDeep/100 space-y-6 flex flex-col h-full justify-evenly order-4 lg:order-1 lg:max-h-full lg:overflow-y-auto">
           <PilePanel title="Draw Pile" subtitle={`${deck.length} left`}>
             {[...deck].reverse().map((c, i) => (
               <CardView key={`draw-${i}`} card={c} variant="stack" />
