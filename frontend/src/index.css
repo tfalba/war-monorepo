@@ -215,6 +215,28 @@
 .deck .card { position: relative; }
 .deck .card:nth-child(odd) { top: 2px; }  /* playful offset */
 
+/* Game picker */
+.game-select {
+  appearance: none;
+  background-color: rgba(0, 0, 0, 0.45);
+  border: 2px solid var(--color-chipBlue);
+  border-radius: 9999px;
+  padding: 0.5rem 2.5rem 0.5rem 1.25rem;
+  font-size: 1.125rem;
+  letter-spacing: 0.2em;
+  color: #ffffff;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+}
+
+.game-select:focus {
+  outline: 2px solid rgba(36, 113, 163, 0.65);
+  outline-offset: 2px;
+}
+
+.game-select option {
+  color: #0f0f0f;
+}
+
 /* Roulette */
 .roulette-wheel-wrap {
   position: relative;

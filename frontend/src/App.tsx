@@ -21,16 +21,21 @@ export default function App() {
             <h1 className="text-5xl font-cursive font-semibold text-gold/90">{selectedGame}</h1>
            
           </div>
-          <div className="flex flex-wrap gap-2">
-            {games.map((game) => (
-              <button
-                key={game}
-                className={`btn ${selectedGame === game ? "btn-primary" : "btn-outline-paper"}`}
-                onClick={() => setSelectedGame(game)}
-              >
-                {game}
-              </button>
-            ))}
+          <div className="flex items-center gap-3">
+            <label className="text-xs uppercase tracking-[0.35em] text-paper/70">
+              Game
+            </label>
+            <select
+              className="game-select text-outline-blue font-display"
+              value={selectedGame}
+              onChange={(event) => setSelectedGame(event.target.value as Game)}
+            >
+              {games.map((game) => (
+                <option key={game} value={game}>
+                  {game}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
