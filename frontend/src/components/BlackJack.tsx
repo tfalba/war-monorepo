@@ -867,12 +867,12 @@ export default function BlackJack() {
             />
           </div>
           {showResultUI ? (
-            <div className="flex flex-col items-center justify-end fixed left-[80%]">
-              <h2 className="text-4xl font-display text-chipBlue text-outline-gold">
+            <div className="flex flex-col items-start gap-2">
+              <h2 className="text-2xl md:text-3xl absolute right-10 font-display text-chipBlue text-outline-gold">
                 {resultHeading}
               </h2>
-              {resultHeading.slice(0,5) !== message.slice(0,5) && (
-                <h4 className="ml-4 text-sm text-white/70">{message}</h4>
+              {resultHeading.slice(0, 5) !== message.slice(0, 5) && (
+                <h4 className="text-sm text-white/70">{message}</h4>
               )}
             </div>
           ) : (
@@ -920,8 +920,7 @@ export default function BlackJack() {
                 ))}
               </div>
             )}
-            <div>
-            <div className="flex flex-wrap items-center gap-3 w-full justify-end absolute bottom-10 right-[50%] ">
+            <div className="flex flex-wrap items-center gap-3 w-full justify-end">
               {canDeal && activeBet === 0 && !showResultUI ? (
                 <button
                   className="btn btn-accent ml-auto"
@@ -967,22 +966,12 @@ export default function BlackJack() {
                 </>
               )}
             </div>
-            </div>
-            {showResultUI ? (
-              <div className="flex w-full items-center gap-4 justify-between absolute bottom-10 right-2">
-                {lastWinAmount > 0 ? (
-                  <WinDisplay amount={lastWinAmount} />
-                ) : (
-                  <span className="text-sm text-transparent">No win</span>
-                )}
+            {showResultUI && (
+              <div className="flex w-full items-center gap-4 justify-between">
+                {lastWinAmount > 0 && <WinDisplay amount={lastWinAmount} />}
                 <button className="btn btn-accent ml-auto" onClick={() => handleDeal()}>
                   Play Next Hand
                 </button>
-              </div>
-            ) : (
-              <div className="flex w-full">
-                <span className="text-sm text-transparent">Waiting</span>
-                <button className="btn text-transparent">Dummy</button>
               </div>
             )}
           </div>
@@ -1116,7 +1105,7 @@ function Hand({
 function FlipDisplayCard({ card, flipped }: { card: Card; flipped: boolean }) {
   const label = card?.rank ?? card?.num ?? "";
   return (
-    <div className="relative h-48 w-32" style={{ perspective: "1200px" }}>
+    <div className={`relative ${flipped ? "h-48" : "h-46"} w-32`} style={{ perspective: "1200px" }}>
       <div className={`card-flip ${flipped ? "is-flipped" : ""}`}>
         <div className="card__face card__face--front">
           <img src={deckBack} alt="Card back" />
